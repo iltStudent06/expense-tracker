@@ -207,8 +207,106 @@ function getTrendPresentation(metric: TrendMetric) {
   return { label: "Balance", className: "balance", accent: "#2563eb" };
 }
 
+type RequestContext =
+  | "login"
+  | "register"
+  | "transactions"
+  | "categories"
+  | "dashboard"
+  | "summary"
+  | "trends"
+  | "generic";
+
+function getRequestContext(path: string): RequestContext {
+  if (path.startsWith("/api/auth/login")) {
+    return "login";
+  }
+
+  if (path.startsWith("/api/auth/register")) {
+    return "register";
+  }
+
+  if (path.startsWith("/api/transactions")) {
+    return "transactions";
+  }
+
+  if (path.startsWith("/api/categories")) {
+    return "categories";
+  }
+
+  if (path.startsWith("/api/dashboard")) {
+    return "dashboard";
+  }
+
+  if (path.startsWith("/api/summary")) {
+    return "summary";
+  }
+
+  if (path.startsWith("/api/trends")) {
+    return "trends";
+  }
+
+  return "generic";
+}
+
+function getFriendlyErrorMessageByStatus(status: number, context: RequestContext) {
+  if (status === 400) {
+    if (context === "login" || context === "register") {
+      return "Please check your email and password and try again.";
+    }
+    return "Please check your input and try again.";
+  }
+
+  if (status === 401) {
+    if (context === "login") {
+      return "Email or password is incorrect.";
+    }
+    return "Your session may have expired. Please sign in again.";
+  }
+
+  if (status === 403) {
+    return "You do not have permission to perform this action.";
+  }
+
+  if (status === 404) {
+    if (context === "transactions") {
+      return "We could not find that transaction.";
+    }
+    if (context === "categories") {
+      return "We could not find that category.";
+    }
+    return "We could not find what you requested.";
+  }
+
+  if (status === 409) {
+    if (context === "register") {
+      return "An account with this email already exists.";
+    }
+    return "This record already exists or was changed. Please refresh and try again.";
+  }
+
+  if (status >= 500) {
+    if (context === "dashboard" || context === "summary" || context === "trends") {
+      return "We could not load your dashboard right now. Please try again in a moment.";
+    }
+    if (context === "transactions") {
+      return "We could not save your transaction right now. Please try again.";
+    }
+    if (context === "categories") {
+      return "We could not update categories right now. Please try again.";
+    }
+    if (context === "login" || context === "register") {
+      return "We could not complete sign in right now. Please try again.";
+    }
+    return "Something went wrong on our side. Please try again in a moment.";
+  }
+
+  return "Something went wrong. Please try again.";
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const session = loadAuthSession();
+  const context = getRequestContext(path);
   const headers = new Headers(options.headers ?? {});
   headers.set("Content-Type", "application/json");
 
@@ -216,13 +314,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers.set("Authorization", `Bearer ${session.token}`);
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    });
+  } catch {
+    if (context === "dashboard" || context === "summary" || context === "trends") {
+      throw new Error("Unable to load your dashboard right now. Please check your connection and try again.");
+    }
+
+    if (context === "transactions") {
+      throw new Error("Unable to save your transaction right now. Please check your connection and try again.");
+    }
+
+    if (context === "categories") {
+      throw new Error("Unable to update categories right now. Please check your connection and try again.");
+    }
+
+    if (context === "login" || context === "register") {
+      throw new Error("Unable to complete sign in right now. Please check your connection and try again.");
+    }
+
+    throw new Error("Unable to connect right now. Please check your internet connection and try again.");
+  }
 
   if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
+    let errorMessage = getFriendlyErrorMessageByStatus(response.status, context);
     try {
       const payload = (await response.json()) as ApiErrorPayload;
       if (payload?.error) {
@@ -238,7 +357,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Request failed";
+  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
 }
 
 function AppShell() {
@@ -296,6 +415,16 @@ function AppShell() {
   );
 }
 
+function AuthFooter() {
+  return (
+    <footer className="auth-footer">
+      <div className="page">
+        <p>© 2026 Expense Tracker. Built for clear, modern financial management.</p>
+      </div>
+    </footer>
+  );
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -324,50 +453,53 @@ function LoginPage() {
   }
 
   return (
-    <main className="page">
-      <section className="panel auth-panel">
-        <div className="auth-copy">
-          <p className="eyebrow">Authentication</p>
-          <h1>Login</h1>
-          <p>Sign in to manage transactions and use the protected write endpoints.</p>
-        </div>
-      </section>
-
-      <section className="panel auth-panel">
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-            />
-          </label>
-
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="auth-actions">
-            <Link to="/register" className="button-secondary">
-              Need an account?
-            </Link>
-            <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
+    <div className="auth-page-shell">
+      <main className="page auth-page-main">
+        <section className="panel auth-panel">
+          <div className="auth-copy">
+            <p className="eyebrow">Authentication</p>
+            <h1>Login</h1>
+            <p>Sign in to manage expense transactions and budgets.</p>
           </div>
-        </form>
-      </section>
-    </main>
+        </section>
+
+        <section className="panel auth-panel">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={form.password}
+                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+              />
+            </label>
+
+            {error ? <p className="error">{error}</p> : null}
+
+            <div className="auth-actions">
+              <button type="submit" className="button-primary" disabled={loading}>
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+              <Link to="/register" className="button-secondary">
+                Need an account?
+              </Link>
+            </div>
+          </form>
+        </section>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }
 
@@ -399,69 +531,72 @@ function RegisterPage() {
   }
 
   return (
-    <main className="page">
-      <section className="panel auth-panel">
-        <div className="auth-copy">
-          <p className="eyebrow">Authentication</p>
-          <h1>Register</h1>
-          <p>Create an account to access protected transaction actions.</p>
-        </div>
-      </section>
-
-      <section className="panel auth-panel">
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Name
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-            />
-          </label>
-          <label>
-            Role
-            <select
-              value={form.role}
-              onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value as UserRole }))}
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="auth-actions">
-            <Link to="/login" className="button-secondary">
-              Have an account?
-            </Link>
-            <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? "Creating..." : "Create account"}
-            </button>
+    <div className="auth-page-shell">
+      <main className="page auth-page-main">
+        <section className="panel auth-panel">
+          <div className="auth-copy">
+            <p className="eyebrow">Authentication</p>
+            <h1>Register</h1>
+            <p>Enter your information below to create a new account.</p>
           </div>
-        </form>
-      </section>
-    </main>
+        </section>
+
+        <section className="panel auth-panel">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <label>
+              Name
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={form.password}
+                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+              />
+            </label>
+            <label>
+              Role
+              <select
+                value={form.role}
+                onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value as UserRole }))}
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+
+            {error ? <p className="error">{error}</p> : null}
+
+            <div className="auth-actions">
+              <button type="submit" className="button-primary" disabled={loading}>
+                {loading ? "Creating..." : "Create account"}
+              </button>
+              <Link to="/login" className="button-secondary">
+                Sign in
+              </Link>
+            </div>
+          </form>
+        </section>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }
 

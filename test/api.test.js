@@ -51,6 +51,24 @@ describe("Expense Dashboard API", () => {
     authToken = response.body.token;
   });
 
+  test("rejects invalid login payloads", async () => {
+    const invalidEmailResponse = await request(app).post("/api/auth/login").send({
+      email: "not-an-email",
+      password: "secret123"
+    });
+
+    assert.equal(invalidEmailResponse.status, 400);
+    assert.equal(invalidEmailResponse.body.error, "email must be valid");
+
+    const shortPasswordResponse = await request(app).post("/api/auth/login").send({
+      email: "test@example.com",
+      password: "123"
+    });
+
+    assert.equal(shortPasswordResponse.status, 400);
+    assert.equal(shortPasswordResponse.body.error, "password must be at least 6 characters");
+  });
+
   test("rejects protected transaction creation without auth", async () => {
     const response = await request(app).post("/api/transactions").send({
       type: "expense",
