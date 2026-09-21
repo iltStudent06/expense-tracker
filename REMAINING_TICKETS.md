@@ -4,28 +4,33 @@ Audit date: 2026-09-21
 
 This ticket list is based on a repository review. Items are split into:
 
+- **Completed tickets**: work that has been implemented in the current branch and is kept here for visibility.
 - **Confirmed repo gaps**: work that still appears unfinished in source control.
 - **Operational/final-delivery tickets**: work that may be done outside the repo, but is not yet documented or provable from the repository alone.
 
 ---
 
-## Confirmed repo gaps
+## Completed tickets
 
-### CAP-001 — Add a dedicated transactions list page
-**Description**
-The capstone requires a list page for each non-User domain model. The current SPA has a dashboard, a categories page, and a transaction detail page, but no dedicated `/transactions` list route or navigation link.
+### ✅ CAP-001 — Add a dedicated transactions list page — COMPLETE
+**Status**
+Completed in the current branch. The app now includes a protected `/transactions` route, a Transactions nav link, and a working transaction list/create/edit/delete UI with tests.
 
-**Evidence**
-- Frontend routes only include `/`, `/categories`, `/transactions/:id`, `/login`, and `/register`.
-- See [frontend/src/App.tsx](frontend/src/App.tsx).
+**Implementation evidence**
+- Protected route and nav link added in [frontend/src/App.tsx](frontend/src/App.tsx).
+- Frontend test coverage added in [frontend/src/App.test.tsx](frontend/src/App.test.tsx).
 
-**Acceptance criteria**
-- Add a protected `/transactions` route.
-- Show transactions in a table or card list with key fields: type, amount, category, date, and description.
-- Add navigation to the transactions page from the main app shell.
+**Acceptance criteria met**
+- Protected `/transactions` route exists.
+- Transactions are shown in a table/list with key fields.
+- Main app shell links to the transactions page.
 - Each transaction links to its detail page.
-- Users can reach create/edit/delete transaction actions from the UI.
-- Add or update at least one frontend test covering the new page.
+- Create/edit/delete actions are available in the UI.
+- Frontend test coverage was added for the new page.
+
+---
+
+## Confirmed repo gaps
 
 ---
 

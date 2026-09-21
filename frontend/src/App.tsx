@@ -8,6 +8,7 @@ import {
   type ReactNode
 } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import TransactionsPageView from "./pages/TransactionsPage";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 const AUTH_STORAGE_KEY = "expense-dashboard-auth";
@@ -264,6 +265,12 @@ function AppShell() {
                   className={({ isActive }) => (isActive ? "active" : undefined)}
                 >
                   Categories
+                </NavLink>
+                <NavLink
+                  to="/transactions"
+                  className={({ isActive }) => (isActive ? "active" : undefined)}
+                >
+                  Transactions
                 </NavLink>
               </>
             ) : (
@@ -1425,6 +1432,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CategoriesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <TransactionsPageView />
               </ProtectedRoute>
             }
           />
