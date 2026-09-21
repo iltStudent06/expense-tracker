@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import CategoriesPageView from "./pages/CategoriesPage";
+import LoginPageView from "./pages/LoginPage";
 import TransactionDetailPageView from "./pages/TransactionDetailPage";
 import TransactionsPageView from "./pages/TransactionsPage";
 
@@ -302,81 +303,6 @@ function AppShell() {
 
       <Outlet />
     </>
-  );
-}
-
-function LoginPage() {
-  const navigate = useNavigate();
-  const { signIn } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await request<AuthSession>("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(form)
-      });
-
-      signIn(response);
-      navigate("/");
-    } catch (submitError) {
-      setError(getErrorMessage(submitError));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <main className="page">
-      <section className="panel auth-panel">
-        <div className="auth-copy">
-          <p className="eyebrow">Authentication</p>
-          <h1>Login</h1>
-          <p>Sign in to manage transactions and use the protected write endpoints.</p>
-        </div>
-      </section>
-
-      <section className="panel auth-panel">
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-            />
-          </label>
-
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="auth-actions">
-            <Link to="/register" className="button-secondary">
-              Need an account?
-            </Link>
-            <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </main>
   );
 }
 
@@ -1119,7 +1045,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPageView />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
