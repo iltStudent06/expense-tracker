@@ -1,49 +1,9 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-  type ReactNode
-} from "react";
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
-import CategoriesPageView from "./pages/CategoriesPage";
-import DashboardPageView from "./pages/DashboardPage";
-import LoginPageView from "./pages/LoginPage";
-import RegisterPageView from "./pages/RegisterPage";
-import TransactionDetailPageView from "./pages/TransactionDetailPage";
-import TransactionsPageView from "./pages/TransactionsPage";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { getErrorMessage, request } from "../lib/api";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";
-const AUTH_STORAGE_KEY = "expense-dashboard-auth";
-
-type UserRole = "user" | "admin";
 type TransactionType = "income" | "expense";
 type TrendMetric = "income" | "expenses" | "balance";
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
-
-interface AuthSession {
-  token: string;
-  user: AuthUser;
-}
-
-interface AuthContextValue {
-  session: AuthSession | null;
-  signIn: (nextSession: AuthSession) => void;
-  signOut: () => void;
-  isAuthenticated: boolean;
-}
-
-interface ApiErrorPayload {
-  error?: string;
-}
 
 interface Category {
   id: string;
@@ -111,62 +71,6 @@ interface TransactionForm {
   date: string;
 }
 
-interface CategoryForm {
-  name: string;
-  color: string;
-  description: string;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-function loadAuthSession(): AuthSession | null {
-  try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthSession) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveAuthSession(session: AuthSession | null) {
-  if (session) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-}
-
-function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-
-  return context;
-}
-
-function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(loadAuthSession);
-
-  function signIn(nextSession: AuthSession) {
-    setSession(nextSession);
-    saveAuthSession(nextSession);
-  }
-
-  function signOut() {
-    setSession(null);
-    saveAuthSession(null);
-  }
-
-  return (
-    <AuthContext.Provider
-      value={{ session, signIn, signOut, isAuthenticated: Boolean(session?.token) }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -213,112 +117,7 @@ function getTrendPresentation(metric: TrendMetric) {
   return { label: "Balance", className: "balance", accent: "#2563eb" };
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const session = loadAuthSession();
-  const headers = new Headers(options.headers ?? {});
-  headers.set("Content-Type", "application/json");
-
-  if (session?.token) {
-    headers.set("Authorization", `Bearer ${session.token}`);
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers
-  });
-
-  if (!response.ok) {
-    let errorMessage = `Request failed: ${response.status}`;
-    try {
-      const payload = (await response.json()) as ApiErrorPayload;
-      if (payload?.error) {
-        errorMessage = payload.error;
-      }
-    } catch {
-      // ignore malformed JSON
-    }
-    throw new Error(errorMessage);
-  }
-
-  return response.json() as Promise<T>;
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Request failed";
-}
-
-function AppShell() {
-  const { isAuthenticated, signOut } = useAuth();
-
-  return (
-    <>
-      <header className="topbar">
-        <div className="page topbar-inner">
-          <Link to="/" className="brand-link" aria-label="Expense Tracker dashboard">
-            <span className="brand-mark">$</span>
-            <span>Expense Tracker</span>
-          </Link>
-
-          <nav className="topnav" aria-label="Primary navigation">
-            {isAuthenticated ? (
-              <>
-                <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : undefined)}>
-                  Dashboard
-                </NavLink>
-                <NavLink
-                  to="/categories"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  Categories
-                </NavLink>
-                <NavLink
-                  to="/transactions"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  Transactions
-                </NavLink>
-              </>
-            ) : (
-              <>
-                <NavLink
-                  to="/login"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  Login
-                </NavLink>
-                <NavLink
-                  to="/register"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  Register
-                </NavLink>
-              </>
-            )}
-            {isAuthenticated ? (
-              <button type="button" className="topnav-button" onClick={signOut}>
-                Logout
-              </button>
-            ) : null}
-          </nav>
-        </div>
-      </header>
-
-      <Outlet />
-    </>
-  );
-}
-
-function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-function DashboardPage() {
+export default function DashboardPage() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
@@ -913,51 +712,5 @@ function DashboardPage() {
         </div>
       </section>
     </main>
-  );
-}
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <DashboardPageView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/categories"
-            element={
-              <ProtectedRoute>
-                <CategoriesPageView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/transactions"
-            element={
-              <ProtectedRoute>
-                <TransactionsPageView />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/transactions/:id"
-            element={
-              <ProtectedRoute>
-                <TransactionDetailPageView />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<LoginPageView />} />
-          <Route path="/register" element={<RegisterPageView />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </AuthProvider>
   );
 }
