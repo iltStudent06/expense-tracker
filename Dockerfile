@@ -2,11 +2,11 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm ci
 
-COPY src ./src
-COPY tsconfig.json ./tsconfig.json
+COPY api/src ./src
+COPY api/tsconfig.json ./tsconfig.json
 
 RUN npm run build
 
@@ -14,7 +14,7 @@ FROM node:20-alpine AS runtime
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist

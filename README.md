@@ -19,7 +19,10 @@ Full-stack capstone project with:
 
 ## Repository layout
 
-- `src/` backend TypeScript source
+- `api/src/` backend TypeScript source
+- `api/package.json` backend package manifest
+- `api/tsconfig.json` backend TypeScript config
+- `api/.env.example` backend environment template
 - `test/` backend integration tests
 - `frontend/src/` frontend application source
 - `client/public/landing.html` static landing page
@@ -39,10 +42,10 @@ Full-stack capstone project with:
 Copy and update:
 
 ```bash
-cp .env.example .env
+cp api/.env.example api/.env
 ```
 
-Default values in `.env.example`:
+Default values in `api/.env.example`:
 
 - `MONGO_URI`
 - `MONGO_DB`
@@ -68,19 +71,20 @@ docker run --rm -d \
 
 ### 2) Start backend API
 
-From repo root:
+From `api` directory:
 
 ```bash
+cd api
 npm install
 npm run dev
 ```
 
-API runs on `http://localhost:3000` by default.
+API runs on `http://localhost:4000` by default.
 
 Health check:
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:4000/health
 ```
 
 ### 3) Start frontend
@@ -97,7 +101,7 @@ Frontend dev server runs on `http://localhost:5173`.
 
 Notes:
 
-- Vite dev proxy forwards `/api` to `http://localhost:3000`.
+- Vite dev proxy forwards `/api` to `http://localhost:4000`.
 - Frontend build is configured with Vite base `/app/`.
 - Landing page URL: `http://localhost:5173/landing.html`
 - React SPA URL: `http://localhost:5173/app/`
@@ -147,6 +151,7 @@ Authorization: Bearer <token>
 ### Backend (repo root)
 
 ```bash
+cd api
 npm run typecheck
 npm test
 ```
