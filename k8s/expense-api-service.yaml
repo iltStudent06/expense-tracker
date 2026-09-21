@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: expense-api
+  namespace: expense-dashboard
+  labels:
+    app: expense-api
+spec:
+  type: ClusterIP
+  selector:
+    app: expense-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
