@@ -1,13 +1,10 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useMemo,
   useState,
-  type FormEvent,
   type ReactNode
 } from "react";
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import CategoriesPageView from "./pages/CategoriesPage";
 import DashboardPageView from "./pages/DashboardPage";
 import LoginPageView from "./pages/LoginPage";
