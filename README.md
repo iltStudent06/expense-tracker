@@ -22,7 +22,7 @@ Full-stack capstone project with:
 - `src/` backend TypeScript source
 - `test/` backend integration tests
 - `frontend/src/` frontend application source
-- `frontend/public/landing.html` static landing page
+- `client/public/landing.html` static landing page
 - `scripts/seed-transactions.js` seed utility script
 - `k8s/` Kubernetes manifests
 - `.github/workflows/` CI and deployment workflows

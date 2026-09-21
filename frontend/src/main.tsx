@@ -1,10 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import App from "./App";
+import App from "../../client/src/App";
 import "./styles.css";
 
-const basename = window.location.pathname.startsWith("/app") ? "/app" : "/";
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
@@ -13,7 +12,7 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename="/app">
       <App />
     </BrowserRouter>
   </React.StrictMode>
