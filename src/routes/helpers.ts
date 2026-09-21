@@ -11,6 +11,11 @@ export interface AuthPayloadInput {
   role?: unknown;
 }
 
+export interface LoginPayloadInput {
+  email?: unknown;
+  password?: unknown;
+}
+
 export interface CategoryPayloadInput {
   name?: unknown;
   color?: unknown;
@@ -110,6 +115,29 @@ export function normalizeAuthPayload(payload: AuthPayloadInput) {
       email: email.trim().toLowerCase(),
       password,
       role
+    }
+  } as const;
+}
+
+export function normalizeLoginPayload(payload: LoginPayloadInput) {
+  const { email, password } = payload;
+
+  if (typeof email !== "string" || typeof password !== "string") {
+    return { error: "email and password are required" } as const;
+  }
+
+  if (!email.includes("@")) {
+    return { error: "email must be valid" } as const;
+  }
+
+  if (password.trim().length < 6) {
+    return { error: "password must be at least 6 characters" } as const;
+  }
+
+  return {
+    value: {
+      email: email.trim().toLowerCase(),
+      password
     }
   } as const;
 }

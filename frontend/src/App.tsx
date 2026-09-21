@@ -1,32 +1,18 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import {
+  AUTH_SESSION_CHANGED_EVENT,
+  AUTH_STORAGE_KEY,
+  loadAuthSession,
+  saveAuthSession,
+  type AuthSession,
+} from "./lib/auth";
 import CategoriesPageView from "./pages/CategoriesPage";
 import DashboardPageView from "./pages/DashboardPage";
 import LoginPageView from "./pages/LoginPage";
 import RegisterPageView from "./pages/RegisterPage";
 import TransactionDetailPageView from "./pages/TransactionDetailPage";
 import TransactionsPageView from "./pages/TransactionsPage";
-
-const AUTH_STORAGE_KEY = "expense-dashboard-auth";
-
-type UserRole = "user" | "admin";
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
-
-interface AuthSession {
-  token: string;
-  user: AuthUser;
-}
 
 interface AuthContextValue {
   session: AuthSession | null;
@@ -36,23 +22,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-function loadAuthSession(): AuthSession | null {
-  try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as AuthSession) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveAuthSession(session: AuthSession | null) {
-  if (session) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-}
 
 function useAuth() {
   const context = useContext(AuthContext);
@@ -65,6 +34,28 @@ function useAuth() {
 
 function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(loadAuthSession);
+
+  useEffect(() => {
+    function syncSession() {
+      setSession(loadAuthSession());
+    }
+
+    function handleStorage(event: StorageEvent) {
+      if (event.key && event.key !== AUTH_STORAGE_KEY) {
+        return;
+      }
+
+      syncSession();
+    }
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(AUTH_SESSION_CHANGED_EVENT, syncSession);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(AUTH_SESSION_CHANGED_EVENT, syncSession);
+    };
+  }, []);
 
   function signIn(nextSession: AuthSession) {
     setSession(nextSession);

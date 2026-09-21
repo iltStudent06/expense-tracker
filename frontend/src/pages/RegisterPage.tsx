@@ -1,30 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { saveAuthSession, type AuthSession, type UserRole } from "../lib/auth";
 import { getErrorMessage, request } from "../lib/api";
-
-type UserRole = "user" | "admin";
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
-
-interface AuthSession {
-  token: string;
-  user: AuthUser;
-}
-
-const AUTH_STORAGE_KEY = "expense-dashboard-auth";
-
-function saveAuthSession(session: AuthSession | null) {
-  if (session) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-}
 
 export default function RegisterPage() {
   const navigate = useNavigate();

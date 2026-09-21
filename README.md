@@ -99,6 +99,8 @@ Notes:
 
 - Vite dev proxy forwards `/api` to `http://localhost:3000`.
 - Frontend build is configured with Vite base `/app/`.
+- Landing page URL: `http://localhost:5173/landing.html`
+- React SPA URL: `http://localhost:5173/app/`
 
 ## App routes
 

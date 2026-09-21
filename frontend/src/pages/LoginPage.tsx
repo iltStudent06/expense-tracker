@@ -1,30 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { saveAuthSession, type AuthSession } from "../lib/auth";
 import { request, getErrorMessage } from "../lib/api";
-
-type UserRole = "user" | "admin";
-
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
-
-interface AuthSession {
-  token: string;
-  user: AuthUser;
-}
-
-const AUTH_STORAGE_KEY = "expense-dashboard-auth";
-
-function saveAuthSession(session: AuthSession | null) {
-  if (session) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -58,7 +35,7 @@ export default function LoginPage() {
         <div className="auth-copy">
           <p className="eyebrow">Authentication</p>
           <h1>Login</h1>
-          <p>Sign in to manage transactions and use the protected write endpoints.</p>
+          <p>Sign in to manage expense transactions and budgets.</p>
         </div>
       </section>
 
@@ -87,12 +64,12 @@ export default function LoginPage() {
           {error ? <p className="error">{error}</p> : null}
 
           <div className="auth-actions">
-            <Link to="/register" className="button-secondary">
-              Need an account?
-            </Link>
             <button type="submit" className="button-primary" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
+            <Link to="/register" className="button-secondary">
+              Need an account?
+            </Link>
           </div>
         </form>
       </section>
