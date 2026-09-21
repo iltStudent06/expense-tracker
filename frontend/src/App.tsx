@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import CategoriesPageView from "./pages/CategoriesPage";
+import TransactionDetailPageView from "./pages/TransactionDetailPage";
 import TransactionsPageView from "./pages/TransactionsPage";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
@@ -1081,73 +1082,6 @@ function DashboardPage() {
   );
 }
 
-function TransactionDetailPage() {
-  const navigate = useNavigate();
-  const { id: transactionId = "" } = useParams();
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    async function loadTransaction() {
-      setLoading(true);
-      setError("");
-
-      try {
-        const data = await request<Transaction>(`/api/transactions/${transactionId}`);
-        setTransaction(data);
-      } catch (loadError) {
-        setError(getErrorMessage(loadError));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadTransaction();
-  }, [transactionId]);
-
-  return (
-    <main className="page">
-      <section className="panel">
-        <p className="eyebrow">Transaction Detail</p>
-        <h1>Transaction Overview</h1>
-        <p className="section-copy">
-          Review a single record with its linked category, amount, date, and descriptive context.
-        </p>
-      </section>
-
-      <section className="panel">
-        <button type="button" onClick={() => navigate(-1)}>
-          Back
-        </button>
-      </section>
-
-      {loading ? <p>Loading...</p> : null}
-      {error ? <p className="error">{error}</p> : null}
-
-      {transaction ? (
-        <section className="grid grid-2">
-          <article className="panel">
-            <h2>Record Details</h2>
-            <p><strong>Type:</strong> {transaction.type}</p>
-            <p><strong>Amount:</strong> {formatCurrency(transaction.amount)}</p>
-            <p><strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()}</p>
-            <p><strong>Description:</strong> {transaction.description || "—"}</p>
-          </article>
-
-          <article className="panel">
-            <h2>Related Category</h2>
-            <p><strong>Name:</strong> {transaction.categoryDetails?.name ?? transaction.category}</p>
-            <p><strong>Color:</strong> {transaction.categoryDetails?.color ?? "—"}</p>
-            <p><strong>Description:</strong> {transaction.categoryDetails?.description ?? "—"}</p>
-            <p><strong>Linked Category ID:</strong> {transaction.categoryId ?? "—"}</p>
-          </article>
-        </section>
-      ) : null}
-    </main>
-  );
-}
-
 export default function App() {
   return (
     <AuthProvider>
@@ -1181,7 +1115,7 @@ export default function App() {
             path="/transactions/:id"
             element={
               <ProtectedRoute>
-                <TransactionDetailPage />
+                <TransactionDetailPageView />
               </ProtectedRoute>
             }
           />
