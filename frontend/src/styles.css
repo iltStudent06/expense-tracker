@@ -43,7 +43,7 @@ body {
   display: grid;
   place-items: center;
   border-radius: 10px;
-  background: #111827;
+  background: linear-gradient(145deg, #1d4ed8, #1e40af);
   color: #fff;
 }
 

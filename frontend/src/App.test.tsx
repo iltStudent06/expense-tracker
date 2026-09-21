@@ -31,7 +31,7 @@ describe("App", () => {
     renderApp(["/"]);
 
     expect(await screen.findByRole("heading", { name: "Login" })).toBeInTheDocument();
-    expect(screen.getByText(/Sign in to manage transactions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sign in to manage expense transactions and budgets/i)).toBeInTheDocument();
   });
 
   test("renders dashboard data for an authenticated user", async () => {
