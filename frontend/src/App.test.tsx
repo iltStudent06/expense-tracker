@@ -176,8 +176,11 @@ describe("App", () => {
 
     renderApp(["/categories"]);
 
-    expect(await screen.findByRole("heading", { name: "Manage Categories" })).toBeInTheDocument();
-    expect(screen.getByText("Groceries")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Manage Categories" })
+    ).toBeInTheDocument();
+
+    expect(await screen.findByText("Groceries")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Travel" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Trips" } });
