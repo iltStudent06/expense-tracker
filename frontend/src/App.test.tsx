@@ -118,9 +118,9 @@ describe("App", () => {
       await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
     ).toBeInTheDocument();
     expect(screen.getByText("Total Categories")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getByText("Weekly shopping")).toBeInTheDocument();
-    expect(screen.getAllByText("$2,454.75").length).toBeGreaterThan(0);
+    expect(await screen.findByText("2")).toBeInTheDocument();
+    expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
+    expect((await screen.findAllByText("$2,454.75")).length).toBeGreaterThan(0);
   });
 
   test("renders categories page and submits a new category", async () => {
@@ -176,8 +176,11 @@ describe("App", () => {
 
     renderApp(["/categories"]);
 
-    expect(await screen.findByRole("heading", { name: "Manage Categories" })).toBeInTheDocument();
-    expect(screen.getByText("Groceries")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Manage Categories" })
+    ).toBeInTheDocument();
+
+    expect(await screen.findByText("Groceries")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Travel" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Trips" } });
