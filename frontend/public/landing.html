@@ -1,416 +1,577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Expense Tracker - Smart Budget Management</title>
-    <style>
-        :root {
-            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-            color: #111827;
-            background: #f3f4f6;
-            --primary: #111827;
-            --accent: #2563eb;
-            --accent-dark: #1e40af;
-            --panel: #ffffff;
-            --panel-border: #e5e7eb;
-            --muted: #6b7280;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Tracker | Landing Page</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --primary: #1d4ed8;
+      --primary-dark: #1e40af;
+      --border: #e2e8f0;
+      --radius: 14px;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --max-width: 1120px;
+      --font: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        html {
-            scroll-behavior: smooth;
-        }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
 
-        body {
-            margin: 0;
-            line-height: 1.6;
-            color: #111827;
-            background: #f3f4f6;
-        }
+    img {
+      max-width: 100%;
+      display: block;
+    }
 
-        a {
-            color: inherit;
-        }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-        .page {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 24px;
-        }
+    .container {
+      width: min(100% - 2rem, var(--max-width));
+      margin-inline: auto;
+    }
 
-        nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--panel-border);
-        }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
 
-        nav .page {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            padding-top: 16px;
-            padding-bottom: 16px;
-        }
+    .nav-inner {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.05rem;
-        }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
 
-        .brand-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: grid;
-            place-items: center;
-            background: #111827;
-            color: #fff;
-            font-size: 1rem;
-        }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.35);
+      font-weight: 800;
+    }
 
-        nav ul {
-            list-style: none;
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            margin: 0;
-            padding: 0;
-            flex-wrap: wrap;
-        }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
 
-        nav a {
-            text-decoration: none;
-            font-weight: 500;
-            color: #374151;
-        }
+    .nav-links a {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.4rem 0.5rem;
+      border-radius: 8px;
+      transition: color 180ms ease, background-color 180ms ease;
+    }
 
-        nav a:hover {
-            color: #111827;
-        }
+    .nav-links a:hover {
+      color: var(--text);
+      background: #eef2ff;
+    }
 
-        .cta-button,
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 0;
-            text-decoration: none;
-            font: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-        }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.72rem 1.1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
 
-        .cta-button,
-        .btn-primary {
-            background: #111827;
-            color: #fff;
-        }
+    .button-primary {
+      color: #ffffff;
+      background: var(--primary);
+      box-shadow: 0 8px 18px rgba(29, 78, 216, 0.28);
+    }
 
-        .cta-button:hover,
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 18px rgba(17, 24, 39, 0.14);
-        }
+    .button-primary:hover {
+      transform: translateY(-1px);
+      background: var(--primary-dark);
+      box-shadow: 0 12px 20px rgba(30, 64, 175, 0.3);
+    }
 
-        .hero,
-        .section-card,
-        .feature-card {
-            background: var(--panel);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 18px;
-        }
+    .nav-links a.button-primary,
+    .nav-links a.button-primary:hover {
+      color: #ffffff;
+      background: var(--primary);
+    }
 
-        .hero {
-            margin-top: 24px;
-            padding: 28px;
-            display: grid;
-            gap: 20px;
-            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-            align-items: center;
-        }
+    .nav-links a.button-primary:hover {
+      background: var(--primary-dark);
+    }
 
-        .hero h1 {
-            font-size: clamp(2rem, 4vw, 3.25rem);
-            line-height: 1.1;
-            margin: 0 0 12px;
-        }
+    .button-ghost {
+      color: var(--text);
+      border-color: var(--border);
+      background: #ffffff;
+    }
 
-        .hero p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 1.05rem;
-            max-width: 58ch;
-        }
+    .button-ghost:hover {
+      transform: translateY(-1px);
+      background: #f8fafc;
+    }
 
-        .hero-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 18px;
-        }
+    .hero {
+      padding: 3.5rem 0 2.25rem;
+      scroll-margin-top: 96px;
+    }
 
-        .hero-preview {
-            background: #f9fafb;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 16px;
-        }
+    .hero-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
 
-        .hero-preview .panel {
-            margin-bottom: 0;
-        }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
 
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.875rem;
-            color: var(--accent);
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+    .hero h1 {
+      margin: 0 0 0.9rem;
+      font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+      line-height: 1.15;
+      white-space: nowrap;
+      text-align: center;
+    }
 
-        .section {
-            margin-top: 16px;
-        }
+    .hero p {
+      margin: 0 auto;
+      color: var(--text-muted);
+      max-width: 72ch;
+      text-align: center;
+    }
 
-        .section-card {
-            margin-top: 16px;
-        }
+    .hero-actions {
+      margin-top: 1.3rem;
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
-        .section-title {
-            margin: 0 0 8px;
-            font-size: 1.5rem;
-        }
+    .hero-highlight {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem;
+    }
 
-        .section-copy {
-            margin: 0 0 16px;
-            color: var(--muted);
-        }
+    .hero-highlight h2 {
+      margin: 0 0 0.55rem;
+      font-size: 1.1rem;
+    }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 16px;
-        }
+    .hero-highlight ul {
+      margin: 0;
+      padding-left: 1.15rem;
+      color: var(--text-muted);
+    }
 
-        .feature-card {
-            box-shadow: none;
-        }
+    .section {
+      padding: 1rem 0 0.25rem;
+      scroll-margin-top: 96px;
+    }
 
-        .feature-card h3 {
-            margin: 0 0 8px;
-            font-size: 1.05rem;
-        }
+    .section h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.6rem;
+    }
 
-        .feature-card p {
-            margin: 0;
-            color: var(--muted);
-        }
+    .section-intro {
+      margin: 0 0 1.2rem;
+      color: var(--text-muted);
+    }
 
-        .badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
 
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-        }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 5px 16px rgba(15, 23, 42, 0.05);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
 
-        .team-card {
-            background: #f9fafb;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 16px;
-        }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.09);
+    }
 
-        .team-card h3 {
-            margin: 0 0 6px;
-        }
+    .feature-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: #e0e7ff;
+      border: 1px solid #c7d2fe;
+      color: #1e3a8a;
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      margin-bottom: 0.7rem;
+    }
 
-        .team-card p {
-            margin: 0;
-            color: var(--muted);
-        }
+    .feature-card h3 {
+      margin: 0 0 0.4rem;
+      font-size: 1.05rem;
+    }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: #eef2ff;
-            color: #1e3a8a;
-            border: 1px solid #c7d2fe;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
+    .feature-card p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.97rem;
+    }
 
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
+    .badge-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+    }
 
-        @media (max-width: 900px) {
-            .hero,
-            .features-grid,
-            .team-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.48rem 0.78rem;
+      border-radius: 999px;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
 
-        @media (max-width: 700px) {
-            nav .page {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
 
-            nav ul {
-                width: 100%;
-                gap: 10px;
-            }
+    .team-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
 
-            .page {
-                padding: 16px;
-            }
+    .team-image-placeholder {
+      width: 88px;
+      height: 88px;
+      border: 1px dashed #94a3b8;
+      border-radius: 999px;
+      background: #f1f5f9;
+      display: grid;
+      place-items: center;
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-bottom: 0;
+      text-align: center;
+      flex-shrink: 0;
+    }
 
-            .hero {
-                padding: 20px;
-            }
+    .team-details {
+      min-width: 0;
+    }
 
-            .hero-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-    </style>
+    .team-card h3 {
+      margin: 0 0 0.2rem;
+      font-size: 1.03rem;
+      color: var(--primary);
+    }
+
+    .team-email {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .team-email:hover {
+      color: var(--primary-dark);
+    }
+
+    .team-role {
+      display: inline-block;
+      margin-bottom: 0.45rem;
+      color: var(--primary-dark);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .team-card p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .launch-banner {
+      margin: 2rem 0 0;
+      background: linear-gradient(145deg, #1d4ed8, #1e3a8a);
+      border-radius: var(--radius);
+      color: #ffffff;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .launch-banner h2 {
+      margin: 0 0 0.3rem;
+      font-size: 1.4rem;
+    }
+
+    .launch-banner p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .launch-banner .button-primary {
+      background: #ffffff;
+      color: #1e3a8a;
+      box-shadow: none;
+    }
+
+    .launch-banner .button-primary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+
+    footer {
+      margin-top: 2rem;
+      border-top: 1px solid var(--border);
+      padding: 1.15rem 0 2rem;
+      color: var(--text-muted);
+      font-size: 0.94rem;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid,
+      .team-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 639px) {
+      .container {
+        width: min(100% - 1.2rem, var(--max-width));
+      }
+
+      .nav-inner {
+        padding: 0.5rem 0;
+      }
+
+      .hero {
+        padding-top: 2.2rem;
+      }
+
+      .hero-panel {
+        padding: 1.25rem;
+      }
+
+      .hero h1 {
+        white-space: normal;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .hero-actions .button {
+        width: 100%;
+      }
+
+      .features-grid,
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .launch-banner {
+        padding: 1.2rem;
+      }
+
+      .launch-banner .button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <nav>
-        <div class="page">
-            <a href="/" class="brand">
-                <span class="brand-badge">$</span>
-                <span>Expense Tracker</span>
-            </a>
-            <ul>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#tech">Tech Stack</a></li>
-                <li><a href="/app/" class="cta-button">Launch App</a></li>
-            </ul>
-        </div>
-    </nav>
+  <nav>
+    <div class="container nav-inner">
+      <a class="brand" href="/landing.html" aria-label="Expense Tracker Home">
+        <span class="brand-mark">$</span>
+        <span>Expense Tracker</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#stack">Tech Stack</a>
+        <a href="#team">Team</a>
+        <a class="button button-primary" href="/app/">Launch App</a>
+      </div>
+    </div>
+  </nav>
 
-    <main class="page">
-        <section class="hero">
-            <div>
-                <div class="eyebrow">Capstone Project</div>
-                <h1>Smart Expense Management</h1>
-                <p>Track your income and expenses, analyze spending patterns, and take control of your budget.</p>
-                <div class="hero-actions">
-                    <a href="/app/" class="btn-primary">Get Started</a>
-                    <a href="#features" class="btn-primary" style="background:#fff;color:#111827;border:1px solid #d1d5db;">View Features</a>
-                </div>
-            </div>
-            <div class="hero-preview panel">
-                <h2 style="margin-top:0;">What you can do</h2>
-                <p style="margin:0;color:var(--muted);">A quick overview of the dashboard experience, designed to feel consistent with the rest of the app.</p>
-                <div class="badges" style="margin-top:16px;">
-                    <span class="badge">Income & Expenses</span>
-                    <span class="badge">Monthly Trends</span>
-                    <span class="badge">Transaction Editing</span>
-                </div>
-            </div>
-        </section>
+  <main class="container">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-panel">
+        <header>
+          <span class="eyebrow">Personal Finance Platform</span>
+          <h1 id="hero-title">Track spending, plan smarter, and stay in control.</h1>
+          <p>
+            Expense Tracker gives you a clear view of your financial activity through fast transaction entry,
+            organized categories, and insightful dashboards — all backed by a cloud-ready architecture built for
+            reliable, everyday use.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/app/">Open React Application</a>
+          </div>
+        </header>
 
-        <section id="features" class="section section-card">
-            <h2 class="section-title">Powerful Features</h2>
-            <p class="section-copy">A clean dashboard experience with the same neutral visual system used in the app.</p>
-            <div class="features-grid">
-                <article class="feature-card">
-                    <h3>📊 Dashboard</h3>
-                    <p>Real-time overview of income, expenses, and balance with simple cards and tables.</p>
-                </article>
-                <article class="feature-card">
-                    <h3>💾 Easy Entry</h3>
-                    <p>Log transactions quickly with categorization and notes for detailed tracking.</p>
-                </article>
-                <article class="feature-card">
-                    <h3>📈 Trends</h3>
-                    <p>Monitor spending patterns over 6 months to make informed decisions.</p>
-                </article>
-                <article class="feature-card">
-                    <h3>🔍 Filters</h3>
-                    <p>Filter by type, category, or date range to find exactly what you need.</p>
-                </article>
-                <article class="feature-card">
-                    <h3>✏️ Full Control</h3>
-                    <p>Edit and delete transactions anytime with inline editing.</p>
-                </article>
-                <article class="feature-card">
-                    <h3>☁️ Cloud Ready</h3>
-                    <p>Built on modern cloud-native architecture for reliability.</p>
-                </article>
-            </div>
-        </section>
+      </div>
+    </section>
 
-        <section id="tech" class="section section-card">
-            <h2 class="section-title">Built With Modern Tech</h2>
-            <p class="section-copy">The same stack powers the API, UI, and deployment workflow.</p>
-            <div class="badges">
-                <span class="badge">React 18</span>
-                <span class="badge">TypeScript</span>
-                <span class="badge">Node.js</span>
-                <span class="badge">Express</span>
-                <span class="badge">MongoDB</span>
-                <span class="badge">Docker</span>
-                <span class="badge">Kubernetes</span>
-                <span class="badge">AWS EKS</span>
-            </div>
-        </section>
+    <section id="features" class="section" aria-labelledby="features-title">
+      <h2 id="features-title">Key Features</h2>
+      <p class="section-intro">Everything you need for practical day-to-day expense management.</p>
+      <div class="features-grid">
+        <article class="feature-card">
+          <div class="feature-icon" aria-label="Transaction tracking icon">💳</div>
+          <h3>Transaction Tracking</h3>
+          <p>Capture income and expenses with concise details, categories, and timestamps.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-label="Category management icon">🏷️</div>
+          <h3>Category Management</h3>
+          <p>Create and organize categories to keep your spending structure clear and consistent.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-label="Dashboard insights icon">📊</div>
+          <h3>Dashboard Insights</h3>
+          <p>Review totals and trends at a glance to understand your current financial position.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-label="Secure access icon">🔒</div>
+          <h3>Secure Access</h3>
+          <p>Authentication-backed routes protect your account and personal finance data.</p>
+        </article>
+      </div>
+    </section>
 
-        <section id="team" class="section section-card">
-            <h2 class="section-title">Team</h2>
-            <p class="section-copy">A collaborative full-stack capstone delivered across UI, API, testing, containers, and deployment workflows.</p>
-            <div class="team-grid">
-                <article class="team-card">
-                    <h3>ginamei</h3>
-                    <p>Full-stack contributor across React, Express, testing, and deployment assets.</p>
-                </article>
-                <article class="team-card">
-                    <h3>iltStudent10</h3>
-                    <p>Full-stack contributor across landing page polish, application features, and release workflow support.</p>
-                </article>
-            </div>
-        </section>
-    </main>
+    <section id="stack" class="section" aria-labelledby="stack-title">
+      <h2 id="stack-title">Tech Stack</h2>
+      <p class="section-intro">Built with modern tools across frontend, backend, and deployment.</p>
+      <div class="badge-wrap" aria-label="Technology badges">
+        <span class="badge">React</span>
+        <span class="badge">TypeScript</span>
+        <span class="badge">Node.js</span>
+        <span class="badge">Express</span>
+        <span class="badge">MongoDB</span>
+        <span class="badge">Docker</span>
+        <span class="badge">Kubernetes</span>
+      </div>
+    </section>
 
-    <footer class="footer">
-        <div class="page">
-            <p>&copy; 2026 Expense Tracker. Full-stack capstone project.</p>
-        </div>
-    </footer>
+    <section id="team" class="section" aria-labelledby="team-title">
+      <h2 id="team-title">Team Members</h2>
+      <p class="section-intro">A collaborative full-stack team delivering product, API, and DevOps features.</p>
+      <div class="team-grid">
+        <article class="team-card">
+          <div class="team-image-placeholder" aria-label="Team member image placeholder">Image Placeholder</div>
+          <div class="team-details">
+            <h3>Michaela Peterson</h3>
+            <a class="team-email" href="mailto:michaela.peterson@libertymutual.com">michaela.peterson@libertymutual.com</a>
+          </div>
+        </article>
+        <article class="team-card">
+          <div class="team-image-placeholder" aria-label="Team member image placeholder">Image Placeholder</div>
+          <div class="team-details">
+            <h3>Gina Mei</h3>
+            <a class="team-email" href="mailto:gina.mei@libertymutual.com">gina.mei@libertymutual.com</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="launch-banner" aria-label="Launch application">
+      <div>
+        <h2>Ready to manage your expenses?</h2>
+        <p>Launch the React SPA to start tracking transactions and viewing your dashboard.</p>
+      </div>
+      <a class="button button-primary" href="/app/">Launch React App</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 Expense Tracker. Built for clear, modern financial management.</p>
+    </div>
+  </footer>
 </body>
 </html>
