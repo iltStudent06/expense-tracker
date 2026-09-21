@@ -2,7 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { createAuthToken } from "../middleware/auth.js";
 import { User } from "../models/User.js";
-import { normalizeAuthPayload, toPublicUser } from "./helpers.js";
+import { normalizeAuthPayload, normalizeLoginPayload, toPublicUser } from "./helpers.js";
 
 const router = Router();
 
@@ -36,18 +36,17 @@ router.post(
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
-    const { email, password } = req.body ?? {};
-
-    if (typeof email !== "string" || typeof password !== "string") {
-      return res.status(400).json({ error: "email and password are required" });
+    const normalized = normalizeLoginPayload(req.body ?? {});
+    if ("error" in normalized) {
+      return res.status(400).json({ error: normalized.error });
     }
 
-    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    const user = await User.findOne({ email: normalized.value.email });
     if (!user) {
       return res.status(401).json({ error: "invalid credentials" });
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await user.comparePassword(normalized.value.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "invalid credentials" });
     }
