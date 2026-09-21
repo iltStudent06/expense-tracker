@@ -415,6 +415,16 @@ function AppShell() {
   );
 }
 
+function AuthFooter() {
+  return (
+    <footer className="auth-footer">
+      <div className="page">
+        <p>© 2026 Expense Tracker. Built for clear, modern financial management.</p>
+      </div>
+    </footer>
+  );
+}
+
 function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -443,50 +453,53 @@ function LoginPage() {
   }
 
   return (
-    <main className="page">
-      <section className="panel auth-panel">
-        <div className="auth-copy">
-          <p className="eyebrow">Authentication</p>
-          <h1>Login</h1>
-          <p>Sign in to manage expense transactions and budgets.</p>
-        </div>
-      </section>
-
-      <section className="panel auth-panel">
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-            />
-          </label>
-
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="auth-actions">
-            <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-            <Link to="/register" className="button-secondary">
-              Need an account?
-            </Link>
+    <div className="auth-page-shell">
+      <main className="page auth-page-main">
+        <section className="panel auth-panel">
+          <div className="auth-copy">
+            <p className="eyebrow">Authentication</p>
+            <h1>Login</h1>
+            <p>Sign in to manage expense transactions and budgets.</p>
           </div>
-        </form>
-      </section>
-    </main>
+        </section>
+
+        <section className="panel auth-panel">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={form.password}
+                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+              />
+            </label>
+
+            {error ? <p className="error">{error}</p> : null}
+
+            <div className="auth-actions">
+              <button type="submit" className="button-primary" disabled={loading}>
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+              <Link to="/register" className="button-secondary">
+                Need an account?
+              </Link>
+            </div>
+          </form>
+        </section>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }
 
@@ -518,69 +531,72 @@ function RegisterPage() {
   }
 
   return (
-    <main className="page">
-      <section className="panel auth-panel">
-        <div className="auth-copy">
-          <p className="eyebrow">Authentication</p>
-          <h1>Register</h1>
-          <p>Create an account to access protected transaction actions.</p>
-        </div>
-      </section>
-
-      <section className="panel auth-panel">
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Name
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-            />
-          </label>
-          <label>
-            Role
-            <select
-              value={form.role}
-              onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value as UserRole }))}
-            >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
-          {error ? <p className="error">{error}</p> : null}
-
-          <div className="auth-actions">
-            <Link to="/login" className="button-secondary">
-              Have an account?
-            </Link>
-            <button type="submit" className="button-primary" disabled={loading}>
-              {loading ? "Creating..." : "Create account"}
-            </button>
+    <div className="auth-page-shell">
+      <main className="page auth-page-main">
+        <section className="panel auth-panel">
+          <div className="auth-copy">
+            <p className="eyebrow">Authentication</p>
+            <h1>Register</h1>
+            <p>Enter your information below to create a new account.</p>
           </div>
-        </form>
-      </section>
-    </main>
+        </section>
+
+        <section className="panel auth-panel">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <label>
+              Name
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={form.password}
+                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+              />
+            </label>
+            <label>
+              Role
+              <select
+                value={form.role}
+                onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value as UserRole }))}
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+
+            {error ? <p className="error">{error}</p> : null}
+
+            <div className="auth-actions">
+              <button type="submit" className="button-primary" disabled={loading}>
+                {loading ? "Creating..." : "Create account"}
+              </button>
+              <Link to="/login" className="button-secondary">
+                Sign in
+              </Link>
+            </div>
+          </form>
+        </section>
+      </main>
+      <AuthFooter />
+    </div>
   );
 }
 
