@@ -19,6 +19,8 @@ metadata:
     app: expense-mongo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: expense-mongo
@@ -53,10 +55,15 @@ spec:
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
+          startupProbe:
+            tcpSocket:
+              port: 27017
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             tcpSocket:
               port: 27017
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
