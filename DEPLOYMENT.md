@@ -152,6 +152,7 @@ cd frontend && npm test && npm run build
 The repository currently includes these API manifests:
 
 - [k8s/namespace.yaml](k8s/namespace.yaml)
+- [k8s/expense-storageclass.yaml](k8s/expense-storageclass.yaml)
 - [k8s/expense-mongo.yaml](k8s/expense-mongo.yaml)
 - [k8s/expense-api-deployment.yaml](k8s/expense-api-deployment.yaml)
 - [k8s/expense-api-service.yaml](k8s/expense-api-service.yaml)
@@ -165,6 +166,7 @@ The repository currently includes these API manifests:
 - deploy 2 API replicas
 - deploy 2 frontend replicas
 - deploy MongoDB inside the cluster with persistent storage
+- create an EKS Auto Mode EBS `StorageClass` for persistent volumes
 - expose the API internally through a `ClusterIP` service
 - expose the frontend publicly through a `LoadBalancer` service
 - use readiness and liveness probes on `/health`
@@ -203,6 +205,7 @@ kubectl apply -f /tmp/expense-api-secret.yaml
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/expense-storageclass.yaml
 kubectl apply -f k8s/expense-mongo.yaml
 kubectl apply -f k8s/expense-api-deployment.yaml
 kubectl apply -f k8s/expense-api-service.yaml

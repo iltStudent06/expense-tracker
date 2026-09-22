@@ -261,6 +261,7 @@ Compose environment overrides:
 Manifests provided:
 
 - `k8s/namespace.yaml`
+- `k8s/expense-storageclass.yaml`
 - `k8s/expense-mongo.yaml`
 - `k8s/expense-api-deployment.yaml`
 - `k8s/expense-api-service.yaml`
@@ -273,6 +274,7 @@ Manifests provided:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/expense-storageclass.yaml
 kubectl apply -f k8s/expense-api-secret.example.yaml
 kubectl apply -f k8s/expense-mongo.yaml
 kubectl apply -f k8s/expense-api-deployment.yaml
