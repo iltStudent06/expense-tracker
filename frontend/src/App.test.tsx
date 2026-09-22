@@ -47,7 +47,14 @@ describe("App", () => {
 
     const fetchMock = vi.mocked(globalThis.fetch);
     fetchMock.mockImplementation((path: string | URL | Request, options: RequestInit = {}) => {
-      if (path === "/api/transactions") {
+      const url =
+        typeof path === "string"
+          ? path
+          : path instanceof Request
+            ? path.url
+            : path.toString();
+
+      if (url === "/api/transactions") {
         return Promise.resolve(
           createJsonResponse([
             {
@@ -64,7 +71,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/summary?month=2026-09") {
+      if (url === "/api/summary?month=2026-09") {
         return Promise.resolve(
           createJsonResponse({
             totals: { income: 2500, expenses: 45.25, balance: 2454.75 }
@@ -72,7 +79,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/trends?months=6") {
+      if (url === "/api/trends?months=6") {
         return Promise.resolve(
           createJsonResponse({
             trends: [{ month: "2026-09", income: 2500, expenses: 45.25, balance: 2454.75 }]
@@ -80,7 +87,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/dashboard") {
+      if (url === "/api/dashboard") {
         return Promise.resolve(
           createJsonResponse({
             totals: { transactions: 1, users: 1, categories: 2 },
@@ -89,7 +96,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/categories") {
+      if (url === "/api/categories") {
         const headers = new Headers(options.headers);
         expect(headers.get("Authorization")).toBe("Bearer test-token");
         return Promise.resolve(
