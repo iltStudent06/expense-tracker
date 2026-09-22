@@ -292,6 +292,51 @@ describe("Expense Dashboard API", () => {
     assert.equal(adminHasUser1Category, true, "Admin should see all categories from all users");
   });
 
+  test("allows authenticated users to view shared transactions", async () => {
+    // Create a second user
+    const user2RegisterResponse = await request(app).post("/api/auth/register").send({
+      name: "User 2",
+      email: "user2-transactions@example.com",
+      password: "secret123",
+      role: "user"
+    });
+
+    assert.equal(user2RegisterResponse.status, 201);
+    const user2Token = user2RegisterResponse.body.token;
+
+    // User 1's transaction should be visible to User 2
+    const user2TransactionResponse = await request(app)
+      .get(`/api/transactions/${transactionId}`)
+      .set("Authorization", `Bearer ${user2Token}`);
+
+    assert.equal(user2TransactionResponse.status, 200);
+    assert.equal(user2TransactionResponse.body.id, transactionId);
+
+    const user2TransactionsResponse = await request(app)
+      .get("/api/transactions")
+      .set("Authorization", `Bearer ${user2Token}`);
+
+    assert.equal(user2TransactionsResponse.status, 200);
+    const hasTransaction = user2TransactionsResponse.body.some((item) => item.id === transactionId);
+    assert.equal(hasTransaction, true, "User 2 should see shared transactions");
+
+    // Admin should also be able to view User 1's transaction
+    const adminTransactionResponse = await request(app)
+      .get(`/api/transactions/${transactionId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminTransactionResponse.status, 200);
+    assert.equal(adminTransactionResponse.body.id, transactionId);
+
+    const adminTransactionsResponse = await request(app)
+      .get("/api/transactions")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminTransactionsResponse.status, 200);
+    const adminHasTransaction = adminTransactionsResponse.body.some((item) => item.id === transactionId);
+    assert.equal(adminHasTransaction, true, "Admin should see all transactions");
+  });
+
   test("logs in and deletes seeded test records", async () => {
     const loginResponse = await request(app).post("/api/auth/login").send({
       email: "test@example.com",

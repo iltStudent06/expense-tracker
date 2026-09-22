@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { loadAuthSession } from "../lib/auth";
 import { getErrorMessage, request } from "../lib/api";
 
 type TransactionType = "income" | "expense";
@@ -118,6 +119,7 @@ function getTrendPresentation(metric: TrendMetric) {
 }
 
 export default function DashboardPage() {
+  const isAdmin = loadAuthSession()?.user.role === "admin";
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
@@ -302,10 +304,12 @@ export default function DashboardPage() {
           <h3>Total Transactions</h3>
           <p className="metric">{appTotals.transactions}</p>
         </article>
-        <article className="panel">
-          <h3>Total Users</h3>
-          <p className="metric">{appTotals.users}</p>
-        </article>
+        {isAdmin ? (
+          <article className="panel">
+            <h3>Total Users</h3>
+            <p className="metric">{appTotals.users}</p>
+          </article>
+        ) : null}
         <article className="panel">
           <h3>Total Categories</h3>
           <p className="metric">{appTotals.categories}</p>

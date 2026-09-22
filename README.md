@@ -168,8 +168,13 @@ The application enforces role-based authorization on protected routes:
   Non-owners receive `403 Forbidden` with error: `"admin role required to delete other users' categories"`
 
 **Transaction operations:**
-- **Read (GET /api/transactions, GET /api/transactions/:id)** — Requires authentication. Users see only their own transactions; admins see all transactions.
+- **Read (GET /api/transactions, GET /api/transactions/:id)** — Requires authentication. Any authenticated user can view shared transactions.
 - **Create/Update/Delete** — Requires authentication and ownership. Users can only modify their own transactions; admins cannot bypass ownership.
+
+### Dashboard visibility
+
+- **Total users** — Displayed only to admins in the UI.
+- **Total transactions** and **total categories** — Displayed to all authenticated users.
 
 ### Role assignment
 
