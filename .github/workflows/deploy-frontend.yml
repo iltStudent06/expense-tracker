@@ -79,5 +79,11 @@ jobs:
 
       - name: Verify rollout
         run: |
-          kubectl rollout status deployment/expense-frontend -n "${{ steps.namespace.outputs.value }}" --timeout=180s
+          kubectl rollout status deployment/expense-frontend -n "${{ steps.namespace.outputs.value }}" --timeout=300s || {
+            kubectl get all -n "${{ steps.namespace.outputs.value }}";
+            kubectl describe deployment/expense-frontend -n "${{ steps.namespace.outputs.value }}";
+            kubectl describe pods -l app=expense-frontend -n "${{ steps.namespace.outputs.value }}";
+            kubectl logs -l app=expense-frontend -n "${{ steps.namespace.outputs.value }}" --tail=200 || true;
+            exit 1;
+          }
           kubectl get pods -l app=expense-frontend -n "${{ steps.namespace.outputs.value }}"

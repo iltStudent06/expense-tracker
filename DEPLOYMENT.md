@@ -214,13 +214,13 @@ kubectl apply -f k8s/expense-frontend-service.yaml
 kubectl apply -f k8s/expense-ingress.yaml
 kubectl rollout status deployment/expense-mongo -n expense-dashboard --timeout=180s
 kubectl rollout status deployment/expense-api -n expense-dashboard --timeout=180s
-kubectl rollout status deployment/expense-frontend -n expense-dashboard --timeout=180s
+kubectl rollout status deployment/expense-frontend -n expense-dashboard --timeout=300s
 ```
 
 To test the API locally from the cluster without an ingress yet:
 
 ```bash
-kubectl port-forward service/expense-api 3000:80
+kubectl port-forward service/expense-api 3000:4000
 ```
 
 To test the frontend locally from the cluster without ingress:
@@ -248,7 +248,7 @@ The repository now also includes an automated frontend deployment workflow at [.
 
 - `/` serves the landing page
 - `/app/` serves the React app
-- `/api/` proxies requests to the Express API
+- `/api/` proxies requests to the internal `expense-api:4000` service name used in both Docker Compose and Kubernetes
 
 ### Recommended Kubernetes approach for the frontend
 
