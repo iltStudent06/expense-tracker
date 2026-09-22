@@ -1,0 +1,13 @@
+{
+  "name": "expense-tracker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix api run build",
+    "typecheck": "npm --prefix api run typecheck",
+    "start": "npm --prefix api run start",
+    "dev": "npm --prefix api run dev",
+    "seed": "npm --prefix api run seed",
+    "test": "npm --prefix api run test"
+  }
+}
