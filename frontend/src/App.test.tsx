@@ -117,6 +117,7 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
     expect(screen.getByText("Total Categories")).toBeInTheDocument();
     expect(await screen.findByText("2")).toBeInTheDocument();
     expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
@@ -202,5 +203,97 @@ describe("App", () => {
     });
 
     expect(await screen.findByText("Travel")).toBeInTheDocument();
+  });
+
+  test("renders transactions page and creates a transaction", async () => {
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({
+        token: "test-token",
+        user: { id: "user-1", name: "Test User", email: "test@example.com", role: "user" }
+      })
+    );
+
+    const initialTransactions = [
+      {
+        id: "tx-1",
+        type: "expense",
+        amount: 42.5,
+        category: "Groceries",
+        categoryId: "cat-1",
+        description: "Weekly shopping",
+        date: "2026-09-18T00:00:00.000Z"
+      }
+    ];
+
+    const categories = [
+      {
+        id: "cat-1",
+        name: "Groceries",
+        color: "#10b981",
+        description: "Food",
+        updatedAt: "2026-09-18T00:00:00.000Z"
+      },
+      {
+        id: "cat-2",
+        name: "Salary",
+        color: "#2563eb",
+        description: "Income",
+        updatedAt: "2026-09-19T00:00:00.000Z"
+      }
+    ];
+
+    const createdTransaction = {
+      id: "tx-2",
+      type: "income",
+      amount: 1200,
+      category: "Salary",
+      categoryId: "cat-2",
+      description: "Payday",
+      date: "2026-09-20T00:00:00.000Z"
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(createJsonResponse(initialTransactions))
+      .mockResolvedValueOnce(createJsonResponse(categories))
+      .mockResolvedValueOnce(createJsonResponse(createdTransaction))
+      .mockResolvedValueOnce(createJsonResponse([...initialTransactions, createdTransaction]))
+      .mockResolvedValueOnce(createJsonResponse(categories));
+
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    renderApp(["/transactions"]);
+
+    expect(
+      await screen.findByRole("heading", { name: "Manage Transactions" })
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Type"), { target: { value: "income" } });
+    fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "1200" } });
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Salary" } });
+    fireEvent.change(screen.getByLabelText("Linked Category"), { target: { value: "cat-2" } });
+    fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Payday" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save Transaction" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(5);
+    });
+
+    const postCall = fetchMock.mock.calls[2] as [string, RequestInit];
+    expect(postCall[0]).toBe("/api/transactions");
+    expect(postCall[1].method).toBe("POST");
+    expect(JSON.parse(String(postCall[1].body))).toMatchObject({
+      type: "income",
+      amount: 1200,
+      category: "Salary",
+      categoryId: "cat-2",
+      description: "Payday",
+      date: expect.any(String)
+    });
+
+    expect(await screen.findByText("Payday")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "View" }).length).toBeGreaterThan(0);
   });
 });

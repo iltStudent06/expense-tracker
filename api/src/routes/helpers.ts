@@ -77,8 +77,10 @@ export function toPublicTransaction(document: {
   category: string;
   categoryId?: mongoose.Types.ObjectId | string | null;
   description?: string;
-  date: Date;
+  date: Date | string;
 }) {
+  const date = new Date(document.date);
+
   return {
     id: document._id.toString(),
     type: document.type,
@@ -86,7 +88,7 @@ export function toPublicTransaction(document: {
     category: document.category,
     categoryId: document.categoryId ? document.categoryId.toString() : null,
     description: document.description ?? "",
-    date: document.date.toISOString()
+    date: Number.isNaN(date.getTime()) ? String(document.date) : date.toISOString()
   };
 }
 
