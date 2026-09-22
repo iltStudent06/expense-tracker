@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -10,12 +10,20 @@ COPY api/tsconfig.json ./tsconfig.json
 
 RUN npm run build
 
-FROM node:20-alpine AS runtime
+FROM node:24-alpine AS runtime
 
 WORKDIR /app
 
+RUN apk upgrade --no-cache
+
 COPY api/package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
+
+RUN rm -rf /usr/local/lib/node_modules/npm \
+  /usr/local/lib/node_modules/corepack \
+  /usr/local/bin/npm \
+  /usr/local/bin/npx \
+  /usr/local/bin/corepack
 
 COPY --from=build /app/dist ./dist
 
