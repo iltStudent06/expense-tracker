@@ -128,17 +128,17 @@ Completed in the current branch and validated operationally in the EKS environme
 
 ---
 
-### CAP-007 — Verify the live public deployment end-to-end
+### ✅ CAP-007 — Verify the live public deployment end-to-end — COMPLETE
 **Description**
 The repo contains Docker and Kubernetes assets, but the repository alone does not prove that the live EKS deployment is currently working.
 
 **Current status note**
 - Backend and frontend deployments have been rolled out successfully in EKS and pod health has been verified.
 - The public frontend URL is now verified and reachable.
-- Remaining proof points are the ingress hostname and any final browser demo screenshots or presentation artifacts.
+- Final browser screenshots can be captured during presentation prep under CAP-008.
 
 **Status**
-Mostly complete; live public URL verification passed.
+Completed in the current branch and validated operationally.
 
 **Acceptance criteria**
 - Public URL loads the landing page at `/`.
