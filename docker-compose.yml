@@ -5,8 +5,8 @@ services:
   frontend:
     # Build frontend image from the frontend workspace Dockerfile.
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     image: expense-dashboard-frontend:latest
     container_name: expense-dashboard-frontend
     # Expose Nginx port 80 on a configurable host port (default 8080).
@@ -35,12 +35,12 @@ services:
     # Runtime configuration for API behavior and MongoDB connection.
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT:-3000}
+      PORT: ${PORT:-4000}
       MONGO_DB: ${MONGO_DB:-expense_dashboard}
       MONGO_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-expense_user}:${MONGO_INITDB_ROOT_PASSWORD:-expense_pass}@mongodb:27017/${MONGO_DB:-expense_dashboard}?authSource=admin
-    # Expose API container port 3000 on a configurable host port.
+    # Expose API container port 4000 on a configurable host port.
     ports:
-      - "${API_PORT:-3000}:3000"
+      - "${API_PORT:-4000}:4000"
     # Start API only after MongoDB passes its health check.
     depends_on:
       mongodb:
@@ -50,7 +50,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -qO- http://127.0.0.1:3000/health > /dev/null || exit 1",
+          "wget -qO- http://127.0.0.1:4000/health > /dev/null || exit 1",
         ]
       interval: 30s
       timeout: 5s
