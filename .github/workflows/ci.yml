@@ -61,4 +61,8 @@ jobs:
         run: npm run build
 
       - name: Frontend Docker build
+<<<<<<< HEAD
         run: docker build -t expense-dashboard-frontend-ci -f frontend/Dockerfile .
+=======
+        run: docker build -f frontend/Dockerfile -t expense-dashboard-frontend-ci .
+>>>>>>> origin/dev
