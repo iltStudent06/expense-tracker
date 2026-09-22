@@ -310,7 +310,7 @@ export default function DashboardPage() {
         </p>
       </section>
 
-      <section className="grid">
+      <section className={`grid dashboard-stats ${isAdmin ? "dashboard-stats-admin" : "dashboard-stats-user"}`}>
         <article className="panel">
           <h3>Total Transactions</h3>
           <p className="metric">{visibleTransactionsCount}</p>
