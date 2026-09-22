@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import App from "../../client/src/App";
+import App from "./App";
 
 const AUTH_STORAGE_KEY = "expense-dashboard-auth";
 
