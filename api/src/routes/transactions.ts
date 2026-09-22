@@ -145,10 +145,16 @@ router.put(
       return res.status(400).json({ error: normalized.error });
     }
 
-    const existing = await TransactionModel.findOne({
-      _id: parsed.value,
-      ownerUserId
-    }).lean();
+    const isAdmin = req.user?.role === "admin";
+
+    const existing = await TransactionModel.findOne(
+      isAdmin
+        ? { _id: parsed.value }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          }
+    ).lean();
 
     if (!existing) {
       return res.status(404).json({ error: "transaction not found" });
@@ -162,10 +168,14 @@ router.put(
     }
 
     const updated = await TransactionModel.findOneAndUpdate(
-      {
-        _id: parsed.value,
-        ownerUserId
-      },
+      isAdmin
+        ? {
+            _id: parsed.value
+          }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          },
       { $set: normalized.value },
       { returnDocument: "after", runValidators: true }
     ).lean();
@@ -192,10 +202,16 @@ router.delete(
       return res.status(400).json({ error: parsed.error });
     }
 
-    const removed = await TransactionModel.findOneAndDelete({
-      _id: parsed.value,
-      ownerUserId
-    }).lean();
+    const isAdmin = req.user?.role === "admin";
+
+    const removed = await TransactionModel.findOneAndDelete(
+      isAdmin
+        ? { _id: parsed.value }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          }
+    ).lean();
     if (!removed) {
       return res.status(404).json({ error: "transaction not found" });
     }

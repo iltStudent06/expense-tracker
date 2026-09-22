@@ -64,6 +64,7 @@ export default function TransactionsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: TransactionSortKey; direction: SortDirection }>({
     key: "date",
     direction: "desc"
@@ -139,6 +140,7 @@ export default function TransactionsPage() {
   }
 
   function startEditing(item: Transaction) {
+    setPendingDeleteId(null);
     const matchedCategory =
       categories.find((entry) => entry.id === item.categoryId) ??
       categories.find((entry) => entry.name.toLowerCase() === String(item.category).toLowerCase());
@@ -198,6 +200,8 @@ export default function TransactionsPage() {
         method: "DELETE"
       });
 
+      setPendingDeleteId(null);
+
       if (editingId === itemId) {
         cancelEditing();
       }
@@ -208,6 +212,14 @@ export default function TransactionsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function requestDelete(itemId: string) {
+    setPendingDeleteId(itemId);
+  }
+
+  function cancelDelete() {
+    setPendingDeleteId(null);
   }
 
   const orderedTransactions = useMemo(() => {
@@ -254,10 +266,23 @@ export default function TransactionsPage() {
     });
   }, [transactions, sort]);
 
-  const availableCategoriesByType = useMemo(
-    () => categories.filter((item) => item.type === form.type),
-    [categories, form.type]
-  );
+  const availableCategoriesByType = useMemo(() => {
+    const seen = new Set<string>();
+
+    return categories.filter((item) => {
+      if (item.type !== form.type) {
+        return false;
+      }
+
+      const key = `${item.type}:${item.name.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [categories, form.type]);
 
   function handleSort(column: TransactionSortKey) {
     setSort((prev) => {
@@ -544,6 +569,20 @@ export default function TransactionsPage() {
                             </button>
                           </>
                         ) : (
+                          pendingDeleteId === item.id ? (
+                            <>
+                              <button
+                                type="button"
+                                className="button-confirm-delete"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Confirm Delete
+                              </button>
+                              <button type="button" onClick={cancelDelete}>
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
                           <>
                             <Link to={`/transactions/${item.id}`} className="action-link-button">
                               View
@@ -551,10 +590,11 @@ export default function TransactionsPage() {
                             <button type="button" onClick={() => startEditing(item)}>
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleDelete(item.id)}>
+                            <button type="button" onClick={() => requestDelete(item.id)}>
                               Delete
                             </button>
                           </>
+                          )
                         )}
                       </div>
                     </td>

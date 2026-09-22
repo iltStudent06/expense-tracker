@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Salary",
+    "type": "income",
+    "color": "#2563eb",
+    "description": "Primary monthly paycheck"
+  },
+  {
+    "name": "Side Hustle",
+    "type": "income",
+    "color": "#7c3aed",
+    "description": "Freelance and gig earnings"
+  },
+  {
+    "name": "Rent",
+    "type": "expense",
+    "color": "#ef4444",
+    "description": "Housing payment"
+  },
+  {
+    "name": "Groceries",
+    "type": "expense",
+    "color": "#10b981",
+    "description": "Supermarket and household food"
+  },
+  {
+    "name": "Utilities",
+    "type": "expense",
+    "color": "#f97316",
+    "description": "Electricity, water, internet"
+  },
+  {
+    "name": "Transportation",
+    "type": "expense",
+    "color": "#0ea5e9",
+    "description": "Fuel, transit, rideshare"
+  },
+  {
+    "name": "Childcare",
+    "type": "expense",
+    "color": "#ec4899",
+    "description": "After-school care and activities"
+  },
+  {
+    "name": "Dining Out",
+    "type": "expense",
+    "color": "#f59e0b",
+    "description": "Restaurants and takeout"
+  },
+  {
+    "name": "Healthcare",
+    "type": "expense",
+    "color": "#14b8a6",
+    "description": "Clinics, pharmacy, and co-pays"
+  }
+]

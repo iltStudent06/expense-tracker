@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "seed": "node ../scripts/seed-transactions.js",
+    "seed:household": "node ../scripts/seed-shared-household.js",
     "test": "node --import tsx --test test/*.test.js"
   },
   "engines": {

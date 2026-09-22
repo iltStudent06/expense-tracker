@@ -8,6 +8,7 @@
     "start": "npm --prefix api run start",
     "dev": "npm --prefix api run dev",
     "seed": "npm --prefix api run seed",
+    "seed:household": "npm --prefix api run seed:household",
     "test": "npm --prefix api run test"
   }
 }

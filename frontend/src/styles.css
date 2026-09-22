@@ -306,6 +306,14 @@ button {
   cursor: pointer;
 }
 
+.button-confirm-delete {
+  background: #2563eb;
+}
+
+.button-confirm-delete:hover {
+  background: #1d4ed8;
+}
+
 .grid {
   display: grid;
   gap: 12px;
