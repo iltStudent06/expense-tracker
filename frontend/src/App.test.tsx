@@ -461,6 +461,8 @@ describe("App", () => {
     });
 
     expect(await screen.findByText("Payday")).toBeInTheDocument();
+    const transactionRows = screen.getAllByRole("row");
+    expect(within(transactionRows[1]).getByText("Payday")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "View" }).length).toBeGreaterThan(0);
   });
 });
