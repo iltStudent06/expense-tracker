@@ -308,14 +308,11 @@ kubectl rollout status deployment/expense-mongo -n expense-dashboard
 
 The deployment workflows expect these repository settings:
 
-**Secrets**
-
-- `AWS_ROLE_TO_ASSUME` — IAM role ARN used by GitHub Actions OIDC for AWS authentication.
-
 The deployment workflows are currently pinned to AWS region `us-east-1`.
 The deployment workflows are currently pinned to EKS cluster `expense-dashboard-capstone`.
 The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
 The deployment workflows are currently pinned to ECR repositories `capstone-api` and `capstone-frontend`.
+The deployment workflows are currently pinned to IAM role `arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy` for GitHub Actions OIDC authentication.
 
 ### Frontend deployment workflow
 

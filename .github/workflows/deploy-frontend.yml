@@ -15,6 +15,7 @@ env:
   EKS_CLUSTER_NAME: expense-dashboard-capstone
   FRONTEND_ECR_REPOSITORY: capstone-frontend
   K8S_NAMESPACE: expense-dashboard
+  AWS_ROLE_TO_ASSUME: arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy
 
 jobs:
   build-scan-push-deploy:
@@ -27,7 +28,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Resolve AWS account ID

@@ -281,14 +281,11 @@ Because the frontend container image still includes a Docker Compose-oriented `/
 
 ### GitHub Actions configuration for frontend deployment
 
-Required repository secret:
-
-- `AWS_ROLE_TO_ASSUME`
-
 The frontend deployment workflow is currently pinned to AWS region `us-east-1`.
 The deployment workflows are currently pinned to EKS cluster `expense-dashboard-capstone`.
 The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
 The frontend deployment workflow is currently pinned to ECR repository `capstone-frontend`.
+The deployment workflows are currently pinned to IAM role `arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy` for GitHub Actions OIDC authentication.
 
 ### Link the AWS account to the GitHub repository
 
@@ -378,21 +375,15 @@ Use one of these approaches:
 
 The role must be allowed to create/update resources in namespace `expense-dashboard`.
 
-#### 5. Add the role ARN to the GitHub repository secrets
+#### 5. Confirm the workflow role ARN
 
-In GitHub:
-
-1. Open the repository.
-2. Go to Settings.
-3. Go to Secrets and variables → Actions.
-4. Under Secrets, create `AWS_ROLE_TO_ASSUME`.
-5. Set its value to the IAM role ARN created above.
-
-Example value:
+The repository workflows now reference the deploy role ARN directly in code:
 
 ```text
-arn:aws:iam::<AWS_ACCOUNT_ID>:role/github-actions-expense-tracker-deploy
+arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy
 ```
+
+So no GitHub Actions secret is required for the role ARN unless you choose to move it back into repository secrets later.
 
 #### 6. First deploy prerequisite for the API
 
@@ -414,7 +405,7 @@ Safe first-deploy order:
 Before triggering the workflows, verify:
 
 - the IAM OIDC provider exists
-- `AWS_ROLE_TO_ASSUME` exists in GitHub secrets
+- the workflow role ARN still matches the created IAM role
 - ECR repositories `capstone-api` and `capstone-frontend` exist
 - EKS cluster `expense-dashboard-capstone` exists
 - an ingress controller that supports class `nginx` is installed in the cluster
