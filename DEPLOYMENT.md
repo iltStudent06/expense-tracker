@@ -286,6 +286,134 @@ The deployment workflows are currently pinned to EKS cluster `expense-dashboard-
 The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
 The frontend deployment workflow is currently pinned to ECR repository `capstone-frontend`.
 
+### Link the AWS account to the GitHub repository
+
+The deployment workflows use GitHub Actions OIDC. That means GitHub does not need long-lived AWS access keys in the repository. Instead, GitHub requests a short-lived AWS token by assuming an IAM role.
+
+Repository scope for this project:
+
+- GitHub repository: `iltStudent06/expense-tracker`
+- AWS region: `us-east-1`
+- EKS cluster: `expense-dashboard-capstone`
+- Kubernetes namespace: `expense-dashboard`
+- API ECR repository: `capstone-api`
+- Frontend ECR repository: `capstone-frontend`
+
+#### 1. Create the GitHub OIDC identity provider in AWS IAM
+
+In AWS Console:
+
+1. Open IAM.
+2. Go to Identity providers.
+3. Add provider.
+4. Provider type: `OpenID Connect`.
+5. Provider URL: `https://token.actions.githubusercontent.com`.
+6. Audience: `sts.amazonaws.com`.
+
+If this provider already exists in the account, reuse it.
+
+#### 2. Create an IAM role for GitHub Actions
+
+Create a role that trusts the GitHub OIDC provider and allows this repository to assume it.
+
+Recommended trust policy:
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+			},
+			"Action": "sts:AssumeRoleWithWebIdentity",
+			"Condition": {
+				"StringEquals": {
+					"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+				},
+				"StringLike": {
+					"token.actions.githubusercontent.com:sub": "repo:iltStudent06/expense-tracker:*"
+				}
+			}
+		}
+	]
+}
+```
+
+If you want to lock deployment down further later, you can narrow the `sub` condition to specific branches or tags.
+
+#### 3. Attach AWS permissions to that role
+
+The role needs permission to:
+
+- push images to ECR repositories `capstone-api` and `capstone-frontend`
+- read the EKS cluster description for `expense-dashboard-capstone`
+- use `kubectl` against the cluster after AWS authentication succeeds
+
+At minimum, the IAM policy should allow these AWS API actions:
+
+- `ecr:GetAuthorizationToken`
+- `ecr:BatchCheckLayerAvailability`
+- `ecr:InitiateLayerUpload`
+- `ecr:UploadLayerPart`
+- `ecr:CompleteLayerUpload`
+- `ecr:PutImage`
+- `ecr:BatchGetImage`
+- `ecr:DescribeRepositories`
+- `eks:DescribeCluster`
+
+#### 4. Grant that IAM role access to the EKS cluster
+
+AWS IAM permission alone is not enough for `kubectl`. The role also needs Kubernetes access inside the EKS cluster.
+
+Use one of these approaches:
+
+- create an EKS access entry for the role, or
+- map the role in the cluster auth configuration if your cluster still uses that older pattern
+
+The role must be allowed to create/update resources in namespace `expense-dashboard`.
+
+#### 5. Add the role ARN to the GitHub repository secrets
+
+In GitHub:
+
+1. Open the repository.
+2. Go to Settings.
+3. Go to Secrets and variables → Actions.
+4. Under Secrets, create `AWS_ROLE_TO_ASSUME`.
+5. Set its value to the IAM role ARN created above.
+
+Example value:
+
+```text
+arn:aws:iam::<AWS_ACCOUNT_ID>:role/github-actions-expense-tracker-deploy
+```
+
+#### 6. First deploy prerequisite for the API
+
+The workflows can create namespace `expense-dashboard` automatically because they apply [k8s/namespace.yaml](k8s/namespace.yaml).
+
+However, the API deployment also depends on the Kubernetes secret `expense-api-secrets`, which is namespaced. That secret must exist in `expense-dashboard` before the API pods can start successfully.
+
+Safe first-deploy order:
+
+1. create the namespace once with `kubectl apply -f k8s/namespace.yaml`
+2. create `expense-api-secrets` in namespace `expense-dashboard`
+3. run the API deployment workflow
+4. run the frontend deployment workflow
+
+#### 7. Quick verification checklist
+
+Before triggering the workflows, verify:
+
+- the IAM OIDC provider exists
+- `AWS_ROLE_TO_ASSUME` exists in GitHub secrets
+- ECR repositories `capstone-api` and `capstone-frontend` exist
+- EKS cluster `expense-dashboard-capstone` exists
+- namespace `expense-dashboard` exists or can be created
+- API secret `expense-api-secrets` exists in namespace `expense-dashboard`
+
 ### Important routing note
 
 In Kubernetes, external `/api` traffic should go through ingress directly to the API service.
