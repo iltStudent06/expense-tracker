@@ -130,9 +130,11 @@ describe("App", () => {
     expect(transactionsCard).not.toBeNull();
     expect(categoriesCard).not.toBeNull();
 
-    expect(within(transactionsCard as HTMLElement).getByText("1")).toBeInTheDocument();
-    expect(within(categoriesCard as HTMLElement).getByText("1")).toBeInTheDocument();
     expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(transactionsCard as HTMLElement).getByText("1")).toBeInTheDocument();
+      expect(within(categoriesCard as HTMLElement).getByText("1")).toBeInTheDocument();
+    });
     expect((await screen.findAllByText("$2,454.75")).length).toBeGreaterThan(0);
   });
 
