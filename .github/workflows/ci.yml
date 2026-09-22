@@ -23,7 +23,7 @@ jobs:
         run: npm ci
 
       - name: Backend typecheck
-        run: npm run typecheck
+        run: npx tsc --noEmit -p tsconfig.json
 
       - name: Backend tests
         run: npm test
@@ -50,7 +50,7 @@ jobs:
 
       - name: Frontend typecheck
         working-directory: frontend
-        run: npm run typecheck
+        run: npx tsc --noEmit -p tsconfig.json
 
       - name: Frontend tests
         working-directory: frontend
@@ -61,4 +61,8 @@ jobs:
         run: npm run build
 
       - name: Frontend Docker build
+<<<<<<< HEAD
+        run: docker build -t expense-dashboard-frontend-ci -f frontend/Dockerfile .
+=======
         run: docker build -f frontend/Dockerfile -t expense-dashboard-frontend-ci .
+>>>>>>> origin/dev
