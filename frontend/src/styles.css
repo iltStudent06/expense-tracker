@@ -112,6 +112,19 @@ body {
   flex-wrap: wrap;
 }
 
+.auth-footer {
+  margin-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  padding: 1.15rem 0 2rem;
+  color: #475569;
+  font-size: 0.94rem;
+  text-align: center;
+}
+
+.auth-footer p {
+  margin: 0;
+}
+
 .button-primary,
 .button-secondary {
   display: inline-flex;
@@ -153,6 +166,16 @@ body {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
+}
+
+.auth-page-shell {
+  min-height: calc(100vh - 67px);
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-page-main {
+  flex: 1;
 }
 
 h1,

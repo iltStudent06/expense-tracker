@@ -136,7 +136,6 @@ function AppShell() {
     </>
   );
 }
-
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
