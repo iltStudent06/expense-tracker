@@ -299,6 +299,37 @@ kubectl rollout status deployment/expense-mongo -n expense-dashboard
 - `deploy-api.yml`
   - builds/scans/pushes API image
   - deploys API to EKS and updates `expense-api` image
+- `deploy-frontend.yml`
+  - builds/scans/pushes frontend image from `frontend/Dockerfile`
+  - deploys the frontend to EKS and updates `expense-frontend` image
+  - verifies rollout success with `kubectl rollout status`
+
+### Required GitHub Actions configuration
+
+The deployment workflows expect these repository settings:
+
+**Secrets**
+
+- `AWS_ROLE_TO_ASSUME` — IAM role ARN used by GitHub Actions OIDC for AWS authentication.
+
+The deployment workflows are currently pinned to AWS region `us-east-1`.
+The deployment workflows are currently pinned to EKS cluster `expense-dashboard-capstone`.
+The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
+The deployment workflows are currently pinned to ECR repositories `capstone-api` and `capstone-frontend`.
+
+### Frontend deployment workflow
+
+The frontend deployment workflow can be started manually or by pushing a release tag that matches `v*`.
+
+At deploy time it will:
+
+- authenticate to AWS with OIDC
+- build the frontend image from `frontend/Dockerfile`
+- scan the image with Trivy
+- push the image to Amazon ECR
+- apply the frontend Kubernetes manifests
+- update the `expense-frontend` deployment image
+- wait for rollout success and print the frontend pod status
 
 ## Seed script status
 

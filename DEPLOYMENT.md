@@ -239,6 +239,8 @@ So the current k8s setup is full-stack and deployable, but TLS and autoscaling w
 
 The frontend is currently production-ready in Docker because it is built by Vite and served by Nginx.
 
+The repository now also includes an automated frontend deployment workflow at [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml).
+
 ### Current runtime behavior
 
 - `/` serves the landing page
@@ -265,11 +267,24 @@ The repository now includes:
 
 ### Suggested frontend rollout flow
 
-1. build and tag the frontend image
-2. push it to the container registry
-3. deploy/update the frontend `Deployment`
-4. attach it to an internal `Service`
-5. route public traffic through `Ingress`
+1. trigger `deploy-frontend.yml` manually or by pushing a `v*` tag
+2. build and tag the frontend image from `frontend/Dockerfile`
+3. scan the image with Trivy
+4. push it to the configured Amazon ECR repository
+5. apply/update the frontend `Deployment`, `Service`, and `Ingress`
+6. update the `expense-frontend` image with `kubectl set image`
+7. wait for `kubectl rollout status` success and inspect frontend pods
+
+### GitHub Actions configuration for frontend deployment
+
+Required repository secret:
+
+- `AWS_ROLE_TO_ASSUME`
+
+The frontend deployment workflow is currently pinned to AWS region `us-east-1`.
+The deployment workflows are currently pinned to EKS cluster `expense-dashboard-capstone`.
+The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
+The frontend deployment workflow is currently pinned to ECR repository `capstone-frontend`.
 
 ### Important routing note
 

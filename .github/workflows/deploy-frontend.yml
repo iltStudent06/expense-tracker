@@ -1,4 +1,4 @@
-name: Deploy API to EKS
+name: Deploy Frontend to EKS
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ permissions:
 env:
   AWS_REGION: us-east-1
   EKS_CLUSTER_NAME: expense-dashboard-capstone
-  ECR_REPOSITORY: capstone-api
+  FRONTEND_ECR_REPOSITORY: capstone-frontend
   K8S_NAMESPACE: expense-dashboard
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
         id: image
         run: |
           IMAGE_TAG="${GITHUB_SHA::7}"
-          IMAGE_URI="${{ steps.aws-account.outputs.account_id }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          IMAGE_URI="${{ steps.aws-account.outputs.account_id }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${FRONTEND_ECR_REPOSITORY}:${IMAGE_TAG}"
           echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Kubernetes namespace
@@ -51,7 +51,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build image
-        run: docker build -t "${{ steps.image.outputs.image_uri }}" .
+        run: docker build -f frontend/Dockerfile -t "${{ steps.image.outputs.image_uri }}" .
 
       - name: Scan image (Trivy)
         uses: aquasecurity/trivy-action@0.28.0
@@ -71,11 +71,12 @@ jobs:
       - name: Apply manifests and update image
         run: |
           kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/expense-api-deployment.yaml -n "${{ steps.namespace.outputs.value }}"
-          kubectl apply -f k8s/expense-api-service.yaml -n "${{ steps.namespace.outputs.value }}"
-          kubectl set image deployment/expense-api expense-api="${{ steps.image.outputs.image_uri }}" -n "${{ steps.namespace.outputs.value }}"
+          kubectl apply -f k8s/expense-frontend-deployment.yaml -n "${{ steps.namespace.outputs.value }}"
+          kubectl apply -f k8s/expense-frontend-service.yaml -n "${{ steps.namespace.outputs.value }}"
+          kubectl apply -f k8s/expense-ingress.yaml -n "${{ steps.namespace.outputs.value }}"
+          kubectl set image deployment/expense-frontend expense-frontend="${{ steps.image.outputs.image_uri }}" -n "${{ steps.namespace.outputs.value }}"
 
       - name: Verify rollout
         run: |
-          kubectl rollout status deployment/expense-api -n "${{ steps.namespace.outputs.value }}" --timeout=180s
-          kubectl get pods -l app=expense-api -n "${{ steps.namespace.outputs.value }}"
+          kubectl rollout status deployment/expense-frontend -n "${{ steps.namespace.outputs.value }}" --timeout=180s
+          kubectl get pods -l app=expense-frontend -n "${{ steps.namespace.outputs.value }}"
