@@ -53,8 +53,10 @@ describe("App", () => {
           : path instanceof Request
             ? path.url
             : path.toString();
+      const parsedUrl = new URL(url, "http://localhost");
+      const route = `${parsedUrl.pathname}${parsedUrl.search}`;
 
-      if (url === "/api/transactions") {
+      if (route === "/api/transactions") {
         return Promise.resolve(
           createJsonResponse([
             {
@@ -71,7 +73,7 @@ describe("App", () => {
         );
       }
 
-      if (url === "/api/summary?month=2026-09") {
+      if (route === "/api/summary?month=2026-09") {
         return Promise.resolve(
           createJsonResponse({
             totals: { income: 2500, expenses: 45.25, balance: 2454.75 }
@@ -79,7 +81,7 @@ describe("App", () => {
         );
       }
 
-      if (url === "/api/trends?months=6") {
+      if (route === "/api/trends?months=6") {
         return Promise.resolve(
           createJsonResponse({
             trends: [{ month: "2026-09", income: 2500, expenses: 45.25, balance: 2454.75 }]
@@ -87,7 +89,7 @@ describe("App", () => {
         );
       }
 
-      if (url === "/api/dashboard") {
+      if (route === "/api/dashboard") {
         return Promise.resolve(
           createJsonResponse({
             totals: { transactions: 1, users: 1, categories: 2 },
@@ -96,7 +98,7 @@ describe("App", () => {
         );
       }
 
-      if (url === "/api/categories") {
+      if (route === "/api/categories") {
         const headers = new Headers(options.headers);
         expect(headers.get("Authorization")).toBe("Bearer test-token");
         return Promise.resolve(
