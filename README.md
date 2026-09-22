@@ -286,9 +286,9 @@ kubectl apply -f k8s/expense-ingress.yaml
 
 ```bash
 kubectl get all -n expense-dashboard
-kubectl rollout status deployment/expense-api -n expense-dashboard
-kubectl rollout status deployment/expense-frontend -n expense-dashboard
-kubectl rollout status deployment/expense-mongo -n expense-dashboard
+kubectl rollout status deployment/expense-api -n expense-dashboard --timeout=300s
+kubectl rollout status deployment/expense-frontend -n expense-dashboard --timeout=300s
+kubectl rollout status deployment/expense-mongo -n expense-dashboard --timeout=300s
 ```
 
 ## GitHub Actions workflows

@@ -79,7 +79,7 @@ jobs:
 
       - name: Verify rollout
         run: |
-          kubectl rollout status deployment/expense-mongo -n "${{ steps.namespace.outputs.value }}" --timeout=180s
-          kubectl rollout status deployment/expense-api -n "${{ steps.namespace.outputs.value }}" --timeout=180s
+          kubectl rollout status deployment/expense-mongo -n "${{ steps.namespace.outputs.value }}" --timeout=300s
+          kubectl rollout status deployment/expense-api -n "${{ steps.namespace.outputs.value }}" --timeout=300s
           kubectl get pods -l app=expense-mongo -n "${{ steps.namespace.outputs.value }}"
           kubectl get pods -l app=expense-api -n "${{ steps.namespace.outputs.value }}"
