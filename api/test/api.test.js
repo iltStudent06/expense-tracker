@@ -46,9 +46,10 @@ describe("Expense Dashboard API", () => {
     });
 
     assert.equal(response.status, 201);
-    assert.ok(response.body.token);
+    assert.ok(response.body.token, "No token returned from registration");
     assert.equal(response.body.user.email, "test@example.com");
     authToken = response.body.token;
+    assert.ok(authToken, "Auth token not set after registration");
   });
 
   test("rejects invalid login payloads", async () => {
