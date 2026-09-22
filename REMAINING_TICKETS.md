@@ -88,16 +88,18 @@ CI builds the frontend image, but the only deployment workflow in the repo targe
 
 ---
 
-### CAP-005 — Align the frontend auth client with the written rubric
-**Description**
-Authentication works with a custom `fetch` wrapper, but the capstone instructions explicitly call for Axios interceptors.
+### ✅ CAP-005 — Align the frontend auth client with the written rubric
+**Status**
+Completed in the current branch. The frontend now uses a shared Axios client with automatic JWT attachment and centralized auth-error handling.
 
-**Evidence**
-- Frontend requests are made through a custom `request()` helper using `fetch`.
-- No Axios dependency is present in the frontend package.
-- See [frontend/src/App.tsx](frontend/src/App.tsx) and [frontend/package.json](frontend/package.json).
+**Implementation evidence**
+- Shared Axios client added in [frontend/src/lib/api.ts](frontend/src/lib/api.ts).
+- Request interceptor attaches the bearer token automatically.
+- Response interceptor clears expired/unauthorized sessions consistently.
+- Frontend auth and CRUD tests updated and validated in [frontend/src/App.test.tsx](frontend/src/App.test.tsx).
+- Dependency added in [frontend/package.json](frontend/package.json).
 
-**Acceptance criteria**
+**Acceptance criteria met**
 - Add a shared Axios client.
 - Attach the JWT automatically with a request interceptor.
 - Handle auth failures consistently in one place.
@@ -105,7 +107,7 @@ Authentication works with a custom `fetch` wrapper, but the capstone instruction
 - Confirm existing auth and CRUD flows still work.
 
 **Priority note**
-This is a **rubric-alignment** ticket. If the instructor is grading by behavior rather than library choice, it may be optional; if they are grading literally against the written spec, it should be completed.
+This is a rubric-alignment ticket and is now complete in the current branch.
 
 ---
 
