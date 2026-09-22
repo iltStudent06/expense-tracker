@@ -7,6 +7,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");
 const seedDir = process.env.SEED_DIR ?? "seed/shared-household";
 const dryRun = process.env.DRY_RUN === "1";
+const resetExistingData = process.env.RESET_EXISTING_DATA !== "0";
 
 function resolveFromRepo(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.resolve(repoRoot, filePath);
@@ -119,6 +120,82 @@ async function fetchUserCategories(token) {
   return payload;
 }
 
+async function fetchUserTransactions(token) {
+  const response = await fetch(transactionsEndpoint, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  const payload = await parseResponsePayload(response);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transactions (${response.status}): ${JSON.stringify(payload)}`);
+  }
+
+  return payload;
+}
+
+async function clearExistingUserData(token) {
+  const [existingTransactions, existingCategories] = await Promise.all([
+    fetchUserTransactions(token),
+    fetchUserCategories(token)
+  ]);
+
+  for (const transaction of existingTransactions) {
+    if (typeof transaction?.id !== "string") {
+      continue;
+    }
+
+    const removeResponse = await fetch(`${transactionsEndpoint}/${transaction.id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (removeResponse.status === 404) {
+      continue;
+    }
+
+    if (!removeResponse.ok) {
+      const payload = await parseResponsePayload(removeResponse);
+      throw new Error(
+        `Failed to delete transaction ${transaction.id} (${removeResponse.status}): ${JSON.stringify(payload)}`
+      );
+    }
+  }
+
+  for (const category of existingCategories) {
+    if (typeof category?.id !== "string") {
+      continue;
+    }
+
+    const removeResponse = await fetch(`${categoriesEndpoint}/${category.id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (removeResponse.status === 404) {
+      continue;
+    }
+
+    if (!removeResponse.ok) {
+      const payload = await parseResponsePayload(removeResponse);
+      throw new Error(
+        `Failed to delete category ${category.id} (${removeResponse.status}): ${JSON.stringify(payload)}`
+      );
+    }
+  }
+
+  return {
+    transactions: existingTransactions.length,
+    categories: existingCategories.length
+  };
+}
+
 function buildCategoryIdMap(categories) {
   const map = new Map();
   for (const category of categories) {
@@ -209,6 +286,7 @@ async function main() {
     const totalTransactions = plan.reduce((sum, entry) => sum + entry.transactions.length, 0);
     console.log("Dry run summary");
     console.log(`- API URL: ${apiBaseUrl}`);
+    console.log(`- Reset existing user data: ${resetExistingData ? "yes" : "no"}`);
     console.log(`- Users: ${plan.length}`);
     console.log(`- Categories per user: ${categories.length}`);
     console.log(`- Total transactions: ${totalTransactions}`);
@@ -222,6 +300,14 @@ async function main() {
 
   for (const entry of plan) {
     const { token, mode } = await registerOrLogin(entry.user);
+
+    if (resetExistingData) {
+      const cleared = await clearExistingUserData(token);
+      console.log(
+        `Cleared ${cleared.transactions} transactions and ${cleared.categories} categories for ${entry.user.email}`
+      );
+    }
+
     const categoryIdMap = await ensureCategories(token, categories);
 
     for (const transaction of entry.transactions) {
