@@ -4,6 +4,7 @@ metadata:
   name: expense-mongo-data
   namespace: expense-dashboard
 spec:
+  storageClassName: auto-ebs-sc
   accessModes:
     - ReadWriteOnce
   resources:

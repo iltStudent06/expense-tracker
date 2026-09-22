@@ -45,6 +45,10 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - expense-api
     # Health check validates API readiness via /health endpoint.
     healthcheck:
       test:

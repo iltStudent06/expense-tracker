@@ -5,6 +5,8 @@ metadata:
   namespace: expense-dashboard
   labels:
     app: expense-frontend
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
 spec:
   type: LoadBalancer
   selector:

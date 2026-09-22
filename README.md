@@ -261,6 +261,8 @@ Compose environment overrides:
 Manifests provided:
 
 - `k8s/namespace.yaml`
+curl -I http://k8s-expensed-expensef-37724fa867-875ab8b1d3c14f97.elb.us-east-1.amazonaws.com
+curl -I http://k8s-expensed-expensef-37724fa867-875ab8b1d3c14f97.elb.us-east-1.amazonaws.com/app/- `k8s/expense-storageclass.yaml`
 - `k8s/expense-mongo.yaml`
 - `k8s/expense-api-deployment.yaml`
 - `k8s/expense-api-service.yaml`
@@ -273,6 +275,7 @@ Manifests provided:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/expense-storageclass.yaml
 kubectl apply -f k8s/expense-api-secret.example.yaml
 kubectl apply -f k8s/expense-mongo.yaml
 kubectl apply -f k8s/expense-api-deployment.yaml
@@ -338,3 +341,11 @@ Because that endpoint currently requires JWT authentication, the seed script wil
 
 - `DEPLOYMENT.md` detailed deployment notes
 - `ARCHITECTURE.md` architecture summary
+
+## Live deployment
+
+Public frontend URL:
+
+- http://k8s-expensed-expensef-09c029c6f0-30256075c96c73a9.elb.us-east-1.amazonaws.com
+
+The React app is available under `/app/` on the same hostname.

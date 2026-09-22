@@ -16,7 +16,7 @@ spec:
               service:
                 name: expense-api
                 port:
-                  number: 80
+                  number: 4000
           - path: /
             pathType: Prefix
             backend:
