@@ -22,6 +22,7 @@ interface Transaction {
   amount: number;
   category: string;
   categoryId: string | null;
+  ownerUserId?: string | null;
   description: string;
   date: string;
   categoryDetails?: Category | null;
@@ -119,7 +120,9 @@ function getTrendPresentation(metric: TrendMetric) {
 }
 
 export default function DashboardPage() {
-  const isAdmin = loadAuthSession()?.user.role === "admin";
+  const session = loadAuthSession();
+  const isAdmin = session?.user.role === "admin";
+  const currentUserId = session?.user.id ?? null;
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
@@ -282,6 +285,14 @@ export default function DashboardPage() {
   );
   const trendPresentation = getTrendPresentation(trendMetric);
   const maxTrendAmount = Math.max(1, ...trends.map((entry) => Math.abs(entry[trendMetric]) || 0));
+  const ownCategoriesCount = currentUserId
+    ? categories.filter((item) => item.ownerUserId === currentUserId).length
+    : categories.length;
+  const ownTransactionsCount = currentUserId
+    ? transactions.filter((item) => item.ownerUserId === currentUserId).length
+    : transactions.length;
+  const visibleCategoriesCount = isAdmin ? appTotals.categories : ownCategoriesCount;
+  const visibleTransactionsCount = isAdmin ? appTotals.transactions : ownTransactionsCount;
 
   const orderedTransactions = useMemo(
     () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -302,7 +313,7 @@ export default function DashboardPage() {
       <section className="grid">
         <article className="panel">
           <h3>Total Transactions</h3>
-          <p className="metric">{appTotals.transactions}</p>
+          <p className="metric">{visibleTransactionsCount}</p>
         </article>
         {isAdmin ? (
           <article className="panel">
@@ -312,7 +323,7 @@ export default function DashboardPage() {
         ) : null}
         <article className="panel">
           <h3>Total Categories</h3>
-          <p className="metric">{appTotals.categories}</p>
+          <p className="metric">{visibleCategoriesCount}</p>
         </article>
       </section>
 

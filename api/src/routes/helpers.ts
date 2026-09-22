@@ -76,6 +76,7 @@ export function toPublicTransaction(document: {
   amount: number;
   category: string;
   categoryId?: mongoose.Types.ObjectId | string | null;
+  ownerUserId?: mongoose.Types.ObjectId | string;
   description?: string;
   date: Date | string;
 }) {
@@ -87,6 +88,7 @@ export function toPublicTransaction(document: {
     amount: document.amount,
     category: document.category,
     categoryId: document.categoryId ? document.categoryId.toString() : null,
+    ownerUserId: document.ownerUserId ? document.ownerUserId.toString() : null,
     description: document.description ?? "",
     date: Number.isNaN(date.getTime()) ? String(document.date) : date.toISOString()
   };

@@ -174,7 +174,7 @@ The application enforces role-based authorization on protected routes:
 ### Dashboard visibility
 
 - **Total users** — Displayed only to admins in the UI.
-- **Total transactions** and **total categories** — Displayed to all authenticated users.
+- **Total transactions** and **total categories** — Displayed as the signed-in user's own counts for regular users, and as full totals for admins.
 
 ### Role assignment
 
