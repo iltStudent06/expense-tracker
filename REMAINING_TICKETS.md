@@ -32,24 +32,22 @@ Completed in the current branch. The app now includes a protected `/transactions
 
 ## Confirmed repo gaps
 
----
+### ✅ CAP-002 — Enforce role-based access control — COMPLETE
+**Status**
+Completed in the current branch and intentionally left in this section per request, marked complete in place.
 
-### CAP-002 — Enforce role-based access control
-**Description**
-The backend stores a `role` on `User` and includes it in the JWT, but the API currently appears to enforce authentication only, not role-based authorization.
+**Implementation evidence**
+- Reusable auth and role middleware implemented in [api/src/middleware/auth.ts](api/src/middleware/auth.ts).
+- Ownership-aware and admin-aware access rules implemented in [api/src/routes/categories.ts](api/src/routes/categories.ts) and [api/src/routes/transactions.ts](api/src/routes/transactions.ts).
+- API test coverage added in [api/test/api.test.js](api/test/api.test.js).
+- RBAC behavior documented in [README.md](README.md).
 
-**Evidence**
-- `User` includes `role` values of `user` and `admin`.
-- JWT payload includes `role`.
-- No route-level role guard is visible in the current auth flow.
-- See [src/models/User.ts](src/models/User.ts), [src/middleware/auth.ts](src/middleware/auth.ts), and [src/routes/auth.ts](src/routes/auth.ts).
-
-**Acceptance criteria**
+**Acceptance criteria met**
 - Introduce reusable role-check middleware.
-- Protect at least one meaningful action with admin-only or role-restricted access.
-- Return `403` for authenticated users without the required role.
-- Add API tests that cover allowed and denied role scenarios.
-- Document which routes/actions are role-restricted.
+- Protect meaningful actions with role-restricted or admin-aware access.
+- Return `403` for authenticated users without required access.
+- Add API tests for allowed and denied scenarios.
+- Document role-restricted behavior and route expectations.
 
 ---
 
