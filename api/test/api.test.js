@@ -46,9 +46,10 @@ describe("Expense Dashboard API", () => {
     });
 
     assert.equal(response.status, 201);
-    assert.ok(response.body.token);
+    assert.ok(response.body.token, "No token returned from registration");
     assert.equal(response.body.user.email, "test@example.com");
     authToken = response.body.token;
+    assert.ok(authToken, "Auth token not set after registration");
   });
 
   test("rejects invalid login payloads", async () => {
@@ -131,7 +132,9 @@ describe("Expense Dashboard API", () => {
     assert.equal(updateResponse.body.amount, 50);
     assert.equal(updateResponse.body.description, "Weekly shopping and snacks");
 
-    const getResponse = await request(app).get(`/api/transactions/${transactionId}`);
+    const getResponse = await request(app)
+      .get(`/api/transactions/${transactionId}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     assert.equal(getResponse.status, 200);
     assert.equal(getResponse.body.categoryDetails?.id, categoryId);
