@@ -130,6 +130,26 @@
       box-shadow: 0 12px 20px rgba(30, 64, 175, 0.3);
     }
 
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.72rem 1.1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+      color: #ffffff;
+      background: var(--primary);
+      box-shadow: 0 8px 18px rgba(29, 78, 216, 0.28);
+    }
+
+    .cta-button:hover {
+      transform: translateY(-1px);
+      background: var(--primary-dark);
+      box-shadow: 0 12px 20px rgba(30, 64, 175, 0.3);
+    }
+
     .nav-links a.button-primary,
     .nav-links a.button-primary:hover {
       color: #ffffff;
@@ -473,7 +493,7 @@
         <a href="#features">Features</a>
         <a href="#stack">Tech Stack</a>
         <a href="#team">Team</a>
-        <a class="button button-primary" href="/app/">Launch App</a>
+        <a href="/app/" class="cta-button">Launch the App</a>
       </div>
     </div>
   </nav>
@@ -490,7 +510,7 @@
             reliable, everyday use.
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="/app/">Open React Application</a>
+            <a href="/app/" class="cta-button">Launch the App</a>
           </div>
         </header>
 
@@ -559,12 +579,12 @@
       </div>
     </section>
 
-    <section class="launch-banner" aria-label="Launch application">
+    <section class="launch-banner" aria-label="Launch the App">
       <div>
         <h2>Ready to manage your expenses?</h2>
-        <p>Launch the React SPA to start tracking transactions and viewing your dashboard.</p>
+        <p>Launch the App to start tracking transactions and viewing your dashboard.</p>
       </div>
-      <a class="button button-primary" href="/app/">Launch React App</a>
+      <a href="/app/" class="cta-button">Launch the App</a>
     </section>
   </main>
 

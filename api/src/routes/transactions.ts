@@ -9,6 +9,19 @@ import { buildTransactionQuery, normalizeTransaction, toPublicCategory, toPublic
 
 const router = Router();
 
+async function ensureOwnedCategory(categoryId: mongoose.Types.ObjectId | undefined, ownerUserId: string) {
+  if (!categoryId) {
+    return null;
+  }
+
+  const category = await CategoryModel.findOne({
+    _id: categoryId,
+    ownerUserId
+  }).lean();
+
+  return category;
+}
+
 async function populateTransactionCategory(document: {
   _id: { toString(): string };
   type: "income" | "expense";
@@ -43,6 +56,13 @@ router.post(
       return res.status(400).json({ error: normalized.error });
     }
 
+    if (normalized.value.categoryId) {
+      const category = await ensureOwnedCategory(normalized.value.categoryId, ownerUserId);
+      if (!category) {
+        return res.status(400).json({ error: "linked category not found for authenticated user" });
+      }
+    }
+
     const created = await TransactionModel.create({
       ...normalized.value,
       ownerUserId
@@ -54,12 +74,19 @@ router.post(
 
 router.get(
   "/",
+  requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
+      return res.status(401).json({ error: "authorization token required" });
+    }
+
     const documents = await TransactionModel.find(
       buildTransactionQuery({
         type: req.query.type,
         category: req.query.category,
-        month: req.query.month
+        month: req.query.month,
+        ownerUserId
       })
     )
       .sort({ date: -1 })
@@ -71,13 +98,22 @@ router.get(
 
 router.get(
   "/:id",
+  requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
+      return res.status(401).json({ error: "authorization token required" });
+    }
+
     const parsed = parseObjectId(String(req.params.id), "transaction id");
     if ("error" in parsed) {
       return res.status(400).json({ error: parsed.error });
     }
 
-    const document = await TransactionModel.findById(parsed.value).lean();
+    const document = await TransactionModel.findOne({
+      _id: parsed.value,
+      ownerUserId
+    }).lean();
     if (!document) {
       return res.status(404).json({ error: "transaction not found" });
     }
@@ -90,6 +126,11 @@ router.put(
   "/:id",
   requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
+      return res.status(401).json({ error: "authorization token required" });
+    }
+
     const parsed = parseObjectId(String(req.params.id), "transaction id");
     if ("error" in parsed) {
       return res.status(400).json({ error: parsed.error });
@@ -100,8 +141,27 @@ router.put(
       return res.status(400).json({ error: normalized.error });
     }
 
-    const updated = await TransactionModel.findByIdAndUpdate(
-      parsed.value,
+    const existing = await TransactionModel.findOne({
+      _id: parsed.value,
+      ownerUserId
+    }).lean();
+
+    if (!existing) {
+      return res.status(404).json({ error: "transaction not found" });
+    }
+
+    if (normalized.value.categoryId) {
+      const category = await ensureOwnedCategory(normalized.value.categoryId, ownerUserId);
+      if (!category) {
+        return res.status(400).json({ error: "linked category not found for authenticated user" });
+      }
+    }
+
+    const updated = await TransactionModel.findOneAndUpdate(
+      {
+        _id: parsed.value,
+        ownerUserId
+      },
       { $set: normalized.value },
       { returnDocument: "after", runValidators: true }
     ).lean();
@@ -118,12 +178,20 @@ router.delete(
   "/:id",
   requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
+      return res.status(401).json({ error: "authorization token required" });
+    }
+
     const parsed = parseObjectId(String(req.params.id), "transaction id");
     if ("error" in parsed) {
       return res.status(400).json({ error: parsed.error });
     }
 
-    const removed = await TransactionModel.findByIdAndDelete(parsed.value).lean();
+    const removed = await TransactionModel.findOneAndDelete({
+      _id: parsed.value,
+      ownerUserId
+    }).lean();
     if (!removed) {
       return res.status(404).json({ error: "transaction not found" });
     }
