@@ -293,14 +293,8 @@ export default function DashboardPage() {
   );
   const trendPresentation = getTrendPresentation(trendMetric);
   const maxTrendAmount = Math.max(1, ...trends.map((entry) => Math.abs(entry[trendMetric]) || 0));
-  const ownCategoriesCount = currentUserId
-    ? categories.filter((item) => item.ownerUserId === currentUserId).length
-    : categories.length;
-  const ownTransactionsCount = currentUserId
-    ? transactions.filter((item) => item.ownerUserId === currentUserId).length
-    : transactions.length;
-  const visibleCategoriesCount = isAdmin ? appTotals.categories : ownCategoriesCount;
-  const visibleTransactionsCount = isAdmin ? appTotals.transactions : ownTransactionsCount;
+  const visibleCategoriesCount = isAdmin ? appTotals.categories : categories.length;
+  const visibleTransactionsCount = isAdmin ? appTotals.transactions : transactions.length;
 
   const orderedTransactions = useMemo(
     () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),

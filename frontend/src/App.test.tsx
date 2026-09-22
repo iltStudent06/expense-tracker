@@ -101,14 +101,6 @@ describe("App", () => {
               description: "Food",
               ownerUserId: "user-1",
               updatedAt: "2026-09-18T00:00:00.000Z"
-            },
-            {
-              id: "cat-2",
-              name: "Utilities",
-              color: "#2563eb",
-              description: "Bills",
-              ownerUserId: "user-2",
-              updatedAt: "2026-09-19T00:00:00.000Z"
             }
           ])
         );
