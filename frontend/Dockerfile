@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app/frontend
 
@@ -12,6 +12,8 @@ RUN cp -r /app/frontend/dist /app/dist
 RUN mkdir -p /app/public && cp /app/client/public/landing.html /app/public/landing.html
 
 FROM nginx:1.27-alpine AS runtime
+
+RUN apk upgrade --no-cache
 
 COPY client/nginx.conf /etc/nginx/conf.d/default.conf
 
