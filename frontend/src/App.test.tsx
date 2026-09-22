@@ -169,6 +169,20 @@ describe("App", () => {
         status: 200
       })
       .mockResolvedValueOnce({
+        data: [
+          {
+            id: "tx-1",
+            type: "income",
+            amount: 180,
+            category: "Interest",
+            categoryId: null,
+            description: "Savings interest",
+            date: "2026-09-11T00:00:00.000Z"
+          }
+        ],
+        status: 200
+      })
+      .mockResolvedValueOnce({
         data: {
           id: "cat-2",
           name: "Travel",
@@ -199,6 +213,20 @@ describe("App", () => {
           }
         ],
         status: 200
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "tx-1",
+            type: "income",
+            amount: 180,
+            category: "Interest",
+            categoryId: null,
+            description: "Savings interest",
+            date: "2026-09-11T00:00:00.000Z"
+          }
+        ],
+        status: 200
       });
 
     renderApp(["/categories"]);
@@ -214,10 +242,10 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Category" }));
 
     await waitFor(() => {
-      expect(axiosInstance.request).toHaveBeenCalledTimes(3);
+      expect(axiosInstance.request).toHaveBeenCalledTimes(5);
     });
 
-    const postCall = axiosInstance.request.mock.calls[1][0];
+    const postCall = axiosInstance.request.mock.calls[2][0];
     expect(postCall.url).toBe("/api/categories");
     expect(postCall.method).toBe("POST");
     expect(postCall.headers.Authorization).toBe("Bearer test-token");

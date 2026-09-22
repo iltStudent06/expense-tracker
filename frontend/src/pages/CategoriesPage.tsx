@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getErrorMessage, request } from "../lib/api";
 
+type CategoryType = "income" | "expense";
+
 interface Category {
   id: string;
   name: string;
-  type: "income" | "expense";
+  type: CategoryType;
   color: string;
   description: string;
   updatedAt: string;
@@ -12,9 +14,19 @@ interface Category {
 
 interface CategoryForm {
   name: string;
-  type: "income" | "expense";
+  type: CategoryType;
   color: string;
   description: string;
+}
+
+interface TransactionCategoryHint {
+  type: CategoryType;
+  category: string;
+  date: string;
+}
+
+interface CategoryLibraryItem extends Category {
+  inferred?: boolean;
 }
 
 function getCategoryBadgeStyle(color?: string) {
@@ -31,11 +43,13 @@ function getCategoryBadgeStyle(color?: string) {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [transactionHints, setTransactionHints] = useState<TransactionCategoryHint[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | "income" | "expense">("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<CategoryForm>({
     name: "",
     type: "expense",
@@ -54,8 +68,13 @@ export default function CategoriesPage() {
     setError("");
 
     try {
-      const data = await request<Category[]>("/api/categories");
-      setCategories(data);
+      const [categoryData, transactionData] = await Promise.all([
+        request<Category[]>("/api/categories"),
+        request<TransactionCategoryHint[]>("/api/transactions")
+      ]);
+
+      setCategories(categoryData);
+      setTransactionHints(transactionData);
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
@@ -88,6 +107,7 @@ export default function CategoriesPage() {
   }
 
   function startEditing(category: Category) {
+    setPendingDeleteId(null);
     setEditingId(category.id);
     setEditForm({
       name: category.name,
@@ -130,6 +150,8 @@ export default function CategoriesPage() {
         method: "DELETE"
       });
 
+      setPendingDeleteId(null);
+
       if (editingId === categoryId) {
         cancelEditing();
       }
@@ -142,13 +164,77 @@ export default function CategoriesPage() {
     }
   }
 
-  const visibleCategories = useMemo(() => {
-    if (!typeFilter) {
-      return categories;
+  function requestDelete(categoryId: string) {
+    setPendingDeleteId(categoryId);
+  }
+
+  function cancelDelete() {
+    setPendingDeleteId(null);
+  }
+
+  const deduplicatedCategories = useMemo<Category[]>(() => {
+    const seen = new Set<string>();
+
+    return categories.filter((category) => {
+      const key = `${category.type}:${category.name.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [categories]);
+
+  const inferredCategories = useMemo<CategoryLibraryItem[]>(() => {
+    const knownKeys = new Set(
+      deduplicatedCategories.map((category) => `${category.type}:${category.name.trim().toLowerCase()}`)
+    );
+    const latestByKey = new Map<string, TransactionCategoryHint>();
+
+    for (const entry of transactionHints) {
+      const normalizedName = entry.category.trim();
+      if (!normalizedName) {
+        continue;
+      }
+
+      const key = `${entry.type}:${normalizedName.toLowerCase()}`;
+      if (knownKeys.has(key)) {
+        continue;
+      }
+
+      const previous = latestByKey.get(key);
+      if (!previous || new Date(entry.date).getTime() > new Date(previous.date).getTime()) {
+        latestByKey.set(key, {
+          ...entry,
+          category: normalizedName
+        });
+      }
     }
 
-    return categories.filter((category) => category.type === typeFilter);
-  }, [categories, typeFilter]);
+    return Array.from(latestByKey.entries()).map(([key, value]) => ({
+      id: `inferred-${key.replace(/[^a-z0-9-:]/gi, "-")}`,
+      name: value.category,
+      type: value.type,
+      color: "#94a3b8",
+      description: "In use by transactions",
+      updatedAt: value.date,
+      inferred: true
+    }));
+  }, [deduplicatedCategories, transactionHints]);
+
+  const libraryCategories = useMemo<CategoryLibraryItem[]>(
+    () => [...deduplicatedCategories, ...inferredCategories],
+    [deduplicatedCategories, inferredCategories]
+  );
+
+  const visibleCategories = useMemo(() => {
+    if (!typeFilter) {
+      return libraryCategories;
+    }
+
+    return libraryCategories.filter((category) => category.type === typeFilter);
+  }, [libraryCategories, typeFilter]);
 
   return (
     <main className="page">
@@ -338,12 +424,27 @@ export default function CategoriesPage() {
                               Cancel
                             </button>
                           </>
+                        ) : category.inferred ? (
+                          <span className="muted">In transactions</span>
+                        ) : pendingDeleteId === category.id ? (
+                          <>
+                            <button
+                              type="button"
+                              className="button-confirm-delete"
+                              onClick={() => handleDelete(category.id)}
+                            >
+                              Confirm Delete
+                            </button>
+                            <button type="button" onClick={cancelDelete}>
+                              Cancel
+                            </button>
+                          </>
                         ) : (
                           <>
                             <button type="button" onClick={() => startEditing(category)}>
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleDelete(category.id)}>
+                            <button type="button" onClick={() => requestDelete(category.id)}>
                               Delete
                             </button>
                           </>

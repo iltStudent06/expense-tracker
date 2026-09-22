@@ -1,0 +1,170 @@
+[
+  {
+    "type": "income",
+    "amount": 3400,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-04-01"
+  },
+  {
+    "type": "expense",
+    "amount": 215,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-04-06"
+  },
+  {
+    "type": "expense",
+    "amount": 165,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-04-14"
+  },
+  {
+    "type": "expense",
+    "amount": 188,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-04-24"
+  },
+  {
+    "type": "income",
+    "amount": 3400,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-05-01"
+  },
+  {
+    "type": "expense",
+    "amount": 208,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-05-05"
+  },
+  {
+    "type": "expense",
+    "amount": 172,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-05-13"
+  },
+  {
+    "type": "expense",
+    "amount": 194,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-05-26"
+  },
+  {
+    "type": "income",
+    "amount": 3450,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-06-01"
+  },
+  {
+    "type": "expense",
+    "amount": 221,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-06-07"
+  },
+  {
+    "type": "expense",
+    "amount": 181,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-06-15"
+  },
+  {
+    "type": "expense",
+    "amount": 201,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-06-25"
+  },
+  {
+    "type": "income",
+    "amount": 3450,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-07-01"
+  },
+  {
+    "type": "expense",
+    "amount": 225,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-07-06"
+  },
+  {
+    "type": "expense",
+    "amount": 189,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-07-14"
+  },
+  {
+    "type": "expense",
+    "amount": 198,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-07-27"
+  },
+  {
+    "type": "income",
+    "amount": 3500,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-08-01"
+  },
+  {
+    "type": "expense",
+    "amount": 218,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-08-08"
+  },
+  {
+    "type": "expense",
+    "amount": 196,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-08-16"
+  },
+  {
+    "type": "expense",
+    "amount": 204,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-08-26"
+  },
+  {
+    "type": "income",
+    "amount": 3500,
+    "category": "Salary",
+    "description": "Jamie monthly salary",
+    "date": "2026-09-01"
+  },
+  {
+    "type": "expense",
+    "amount": 229,
+    "category": "Transportation",
+    "description": "Fuel and transit pass",
+    "date": "2026-09-07"
+  },
+  {
+    "type": "expense",
+    "amount": 202,
+    "category": "Dining Out",
+    "description": "Family dinner outings",
+    "date": "2026-09-15"
+  },
+  {
+    "type": "expense",
+    "amount": 209,
+    "category": "Groceries",
+    "description": "Fresh produce and pantry",
+    "date": "2026-09-24"
+  }
+]
