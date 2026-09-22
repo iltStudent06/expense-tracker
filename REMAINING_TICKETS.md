@@ -112,14 +112,16 @@ This is a rubric-alignment ticket and is now complete in the current branch.
 
 ## Operational / final-delivery tickets
 
-### CAP-006 — Provision production secrets and verify cluster configuration
-**Description**
-The repo includes an example secret manifest, but production secrets should be created securely outside source control and verified in the cluster.
+### ✅ CAP-006 — Provision production secrets and verify cluster configuration — COMPLETE
+**Status**
+Completed in the current branch and validated operationally in the EKS environment.
 
-**Evidence**
-- The repo contains [k8s/expense-api-secret.example.yaml](k8s/expense-api-secret.example.yaml), not a production-ready secret workflow.
+**Implementation evidence**
+- The real Kubernetes secret was created outside source control in namespace `expense-dashboard` using the documented `expense-api-secrets` keys.
+- The API and MongoDB deployments were restarted and verified healthy after secret-backed startup.
+- Secure secret creation and deployment prerequisites are documented in [DEPLOYMENT.md](DEPLOYMENT.md).
 
-**Acceptance criteria**
+**Acceptance criteria met**
 - Create the real Kubernetes secret outside source control.
 - Verify the API deployment reads the required secret values successfully.
 - Confirm pods are healthy after secret injection.
@@ -130,6 +132,14 @@ The repo includes an example secret manifest, but production secrets should be c
 ### CAP-007 — Verify the live public deployment end-to-end
 **Description**
 The repo contains Docker and Kubernetes assets, but the repository alone does not prove that the live EKS deployment is currently working.
+
+**Current status note**
+- Backend and frontend deployments have been rolled out successfully in EKS and pod health has been verified.
+- The public frontend URL is now verified and reachable.
+- Remaining proof points are the ingress hostname and any final browser demo screenshots or presentation artifacts.
+
+**Status**
+Mostly complete; live public URL verification passed.
 
 **Acceptance criteria**
 - Public URL loads the landing page at `/`.
