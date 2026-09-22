@@ -3,10 +3,13 @@ import { Link } from "react-router-dom";
 import { getErrorMessage, request } from "../lib/api";
 
 type TransactionType = "income" | "expense";
+type TransactionSortKey = "date" | "type" | "category" | "amount";
+type SortDirection = "asc" | "desc";
 
 interface Category {
   id: string;
   name: string;
+  type: TransactionType;
   color: string;
   description: string;
   updatedAt: string;
@@ -38,6 +41,22 @@ function formatCurrency(amount: number) {
   }).format(amount || 0);
 }
 
+function getCategoryBadgeStyle(categoryId: string | null, categoryName: string, categories: Category[]) {
+  const matchedCategory =
+    categories.find((entry) => entry.id === categoryId) ??
+    categories.find((entry) => entry.name.toLowerCase() === categoryName.toLowerCase());
+
+  if (!matchedCategory?.color) {
+    return undefined;
+  }
+
+  return {
+    color: matchedCategory.color,
+    borderColor: matchedCategory.color,
+    backgroundColor: `${matchedCategory.color}1A`
+  };
+}
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,6 +64,10 @@ export default function TransactionsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [sort, setSort] = useState<{ key: TransactionSortKey; direction: SortDirection }>({
+    key: "date",
+    direction: "desc"
+  });
   const [form, setForm] = useState<TransactionForm>({
     type: "expense",
     amount: "",
@@ -187,10 +210,72 @@ export default function TransactionsPage() {
     }
   }
 
-  const orderedTransactions = useMemo(
-    () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-    [transactions]
+  const orderedTransactions = useMemo(() => {
+    const multiplier = sort.direction === "asc" ? 1 : -1;
+
+    return [...transactions].sort((a, b) => {
+      if (sort.key === "date") {
+        const delta = (new Date(a.date).getTime() - new Date(b.date).getTime()) * multiplier;
+
+        if (delta !== 0) {
+          return delta;
+        }
+
+        return b.id.localeCompare(a.id);
+      }
+
+      if (sort.key === "amount") {
+        const delta = (a.amount - b.amount) * multiplier;
+
+        if (delta !== 0) {
+          return delta;
+        }
+
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+
+      if (sort.key === "type") {
+        const delta = a.type.localeCompare(b.type) * multiplier;
+
+        if (delta !== 0) {
+          return delta;
+        }
+
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+
+      const delta = a.category.localeCompare(b.category, undefined, { sensitivity: "base" }) * multiplier;
+
+      if (delta !== 0) {
+        return delta;
+      }
+
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [transactions, sort]);
+
+  const availableCategoriesByType = useMemo(
+    () => categories.filter((item) => item.type === form.type),
+    [categories, form.type]
   );
+
+  function handleSort(column: TransactionSortKey) {
+    setSort((prev) => {
+      if (prev.key !== column) {
+        return { key: column, direction: "desc" };
+      }
+
+      return { key: column, direction: prev.direction === "desc" ? "asc" : "desc" };
+    });
+  }
+
+  function getSortLabel(column: TransactionSortKey) {
+    if (sort.key !== column) {
+      return "Not sorted";
+    }
+
+    return sort.direction === "asc" ? "Sorted ascending" : "Sorted descending";
+  }
 
   return (
     <main className="page">
@@ -203,14 +288,19 @@ export default function TransactionsPage() {
       </section>
 
       <section className="panel">
-        <h2>Create Transaction</h2>
+        <h2>Add New Transaction</h2>
         <form className="form" onSubmit={handleSubmit}>
           <label>
             Type
             <select
               value={form.type}
               onChange={(event) =>
-                setForm((prev) => ({ ...prev, type: event.target.value as TransactionType }))
+                setForm((prev) => ({
+                  ...prev,
+                  type: event.target.value as TransactionType,
+                  categoryId: "",
+                  category: ""
+                }))
               }
             >
               <option value="expense">Expense</option>
@@ -232,17 +322,8 @@ export default function TransactionsPage() {
 
           <label>
             Category
-            <input
-              type="text"
-              required
-              value={form.category}
-              onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-            />
-          </label>
-
-          <label>
-            Existing Category
             <select
+              required
               value={form.categoryId}
               onChange={(event) => {
                 const selectedId = event.target.value;
@@ -251,12 +332,12 @@ export default function TransactionsPage() {
                 setForm((prev) => ({
                   ...prev,
                   categoryId: selectedId,
-                  category: selectedCategory?.name ?? prev.category
+                  category: selectedCategory?.name ?? ""
                 }));
               }}
             >
-              <option value="">None</option>
-              {categories.map((item) => (
+              <option value="">Select category</option>
+              {availableCategoriesByType.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -298,11 +379,51 @@ export default function TransactionsPage() {
           <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Category</th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleSort("date")}
+                    aria-label={`Sort by Date (${getSortLabel("date")})`}
+                  >
+                    Date
+                    {sort.key === "date" ? ` ${sort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleSort("type")}
+                    aria-label={`Sort by Type (${getSortLabel("type")})`}
+                  >
+                    Type
+                    {sort.key === "type" ? ` ${sort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleSort("category")}
+                    aria-label={`Sort by Category (${getSortLabel("category")})`}
+                  >
+                    Category
+                    {sort.key === "category" ? ` ${sort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
                 <th>Description</th>
-                <th>Amount</th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleSort("amount")}
+                    aria-label={`Sort by Amount (${getSortLabel("amount")})`}
+                  >
+                    Amount
+                    {sort.key === "amount" ? ` ${sort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -375,7 +496,12 @@ export default function TransactionsPage() {
                           </select>
                         </div>
                       ) : (
-                        item.category
+                        <span
+                          className="category-badge"
+                          style={getCategoryBadgeStyle(item.categoryId, item.category, categories)}
+                        >
+                          {item.category}
+                        </span>
                       )}
                     </td>
                     <td>

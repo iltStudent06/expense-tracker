@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { loadAuthSession } from "../lib/auth";
 import { getErrorMessage, request } from "../lib/api";
 
 type TransactionType = "income" | "expense";
 type TrendMetric = "income" | "expenses" | "balance";
+type TrendSortKey = "income" | "expenses" | "balance";
+type SortDirection = "asc" | "desc";
 
 interface Category {
   id: string;
@@ -80,6 +82,18 @@ function formatCurrency(amount: number) {
   }).format(amount || 0);
 }
 
+function getBalanceValueClass(amount: number) {
+  if (amount > 0) {
+    return "value-positive";
+  }
+
+  if (amount < 0) {
+    return "value-negative";
+  }
+
+  return "";
+}
+
 function getCurrentMonth() {
   const now = new Date();
   const month = `${now.getMonth() + 1}`.padStart(2, "0");
@@ -119,6 +133,39 @@ function getTrendPresentation(metric: TrendMetric) {
   return { label: "Balance", className: "balance", accent: "#2563eb" };
 }
 
+function getCategoryBadgeStyle(categoryId: string | null, categoryName: string, categories: Category[]) {
+  const matchedCategory =
+    categories.find((entry) => entry.id === categoryId) ??
+    categories.find((entry) => entry.name.toLowerCase() === categoryName.toLowerCase());
+
+  if (!matchedCategory?.color) {
+    return undefined;
+  }
+
+  return {
+    color: matchedCategory.color,
+    borderColor: matchedCategory.color,
+    backgroundColor: `${matchedCategory.color}1A`
+  };
+}
+
+function formatMonthLabel(monthKey: string) {
+  const match = monthKey.match(/^(\d{4})-(\d{2})$/);
+  if (!match) {
+    return monthKey;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const date = new Date(Date.UTC(year, month - 1, 1));
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(date);
+}
+
 function isSameMonth(isoDate: string, month: string) {
   if (!month) {
     return true;
@@ -134,6 +181,7 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
+  const [trendSort, setTrendSort] = useState<{ key: TrendSortKey; direction: SortDirection } | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [trends, setTrends] = useState<TrendEntry[]>([]);
@@ -149,14 +197,6 @@ export default function DashboardPage() {
     category: "",
     description: "",
     date: ""
-  });
-  const [form, setForm] = useState<TransactionForm>({
-    type: "expense",
-    amount: "",
-    categoryId: "",
-    category: "",
-    description: "",
-    date: new Date().toISOString().slice(0, 10)
   });
 
   async function loadDashboard(selectedMonth: string, selectedCategory: string) {
@@ -188,33 +228,6 @@ export default function DashboardPage() {
   useEffect(() => {
     void loadDashboard(month, categoryFilter);
   }, [month, categoryFilter]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-
-    try {
-      await request<Transaction>("/api/transactions", {
-        method: "POST",
-        body: JSON.stringify({
-          ...form,
-          ...(form.categoryId ? { categoryId: form.categoryId } : {}),
-          amount: Number(form.amount)
-        })
-      });
-
-      setForm((prev) => ({
-        ...prev,
-        amount: "",
-        categoryId: "",
-        category: "",
-        description: ""
-      }));
-      await loadDashboard(month, categoryFilter);
-    } catch (submitError) {
-      setError(getErrorMessage(submitError));
-    }
-  }
 
   function startEditing(item: Transaction) {
     const matchedCategory =
@@ -293,8 +306,44 @@ export default function DashboardPage() {
   );
   const trendPresentation = getTrendPresentation(trendMetric);
   const maxTrendAmount = Math.max(1, ...trends.map((entry) => Math.abs(entry[trendMetric]) || 0));
+  const orderedTrends = useMemo(() => [...trends].reverse(), [trends]);
+  const sortedTrendRows = useMemo(() => {
+    if (!trendSort) {
+      return orderedTrends;
+    }
+
+    const multiplier = trendSort.direction === "asc" ? 1 : -1;
+
+    return [...orderedTrends].sort((a, b) => {
+      const delta = (a[trendSort.key] - b[trendSort.key]) * multiplier;
+
+      if (delta !== 0) {
+        return delta;
+      }
+
+      return new Date(b.month).getTime() - new Date(a.month).getTime();
+    });
+  }, [orderedTrends, trendSort]);
   const visibleCategoriesCount = isAdmin ? appTotals.categories : categories.length;
   const visibleTransactionsCount = isAdmin ? appTotals.transactions : transactions.length;
+
+  function handleTrendSort(column: TrendSortKey) {
+    setTrendSort((prev) => {
+      if (!prev || prev.key !== column) {
+        return { key: column, direction: "desc" };
+      }
+
+      return { key: column, direction: prev.direction === "desc" ? "asc" : "desc" };
+    });
+  }
+
+  function getTrendSortLabel(column: TrendSortKey) {
+    if (!trendSort || trendSort.key !== column) {
+      return "Not sorted";
+    }
+
+    return trendSort.direction === "asc" ? "Sorted ascending" : "Sorted descending";
+  }
 
   const orderedTransactions = useMemo(
     () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -316,10 +365,9 @@ export default function DashboardPage() {
     <main className="page">
       <section className="panel">
         <p className="eyebrow">Dashboard</p>
-        <h1>Expense Tracker / Budget Dashboard</h1>
+        <h1>Expense Tracker</h1>
         <p className="section-copy">
-          Track transactions, review monthly totals, inspect trend data, and manage model
-          relationships with categories.
+          Track recent transactions, review monthly totals, and review trends.
         </p>
       </section>
 
@@ -338,91 +386,6 @@ export default function DashboardPage() {
           <h3>Total Categories</h3>
           <p className="metric">{visibleCategoriesCount}</p>
         </article>
-      </section>
-
-      <section className="panel">
-        <h2>Log Transaction</h2>
-        <form className="form" onSubmit={handleSubmit}>
-          <label>
-            Type
-            <select
-              value={form.type}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, type: event.target.value as TransactionType }))
-              }
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </label>
-
-          <label>
-            Amount
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={form.amount}
-              onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))}
-            />
-          </label>
-
-          <label>
-            Category
-            <input
-              type="text"
-              required
-              value={form.category}
-              onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-            />
-          </label>
-
-          <label>
-            Existing Category
-            <select
-              value={form.categoryId}
-              onChange={(event) => {
-                const selectedId = event.target.value;
-                const selectedCategory = categories.find((entry) => entry.id === selectedId);
-
-                setForm((prev) => ({
-                  ...prev,
-                  categoryId: selectedId,
-                  category: selectedCategory?.name ?? prev.category
-                }));
-              }}
-            >
-              <option value="">None</option>
-              {categories.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Date
-            <input
-              type="date"
-              required
-              value={form.date}
-              onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
-            />
-          </label>
-
-          <label className="span-2">
-            Description
-            <input
-              type="text"
-              value={form.description}
-              onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-            />
-          </label>
-
-          <button type="submit">Save Transaction</button>
-        </form>
       </section>
 
       <section className="panel filters">
@@ -461,7 +424,7 @@ export default function DashboardPage() {
         </article>
         <article className="panel">
           <h3>Balance</h3>
-          <p className="metric">{formatCurrency(totals.balance)}</p>
+          <p className={`metric ${getBalanceValueClass(totals.balance)}`}>{formatCurrency(totals.balance)}</p>
         </article>
       </section>
 
@@ -563,7 +526,7 @@ export default function DashboardPage() {
                           <option value="income">Income</option>
                         </select>
                       ) : (
-                        item.type
+                        <span className={`status-badge ${item.type}`}>{item.type}</span>
                       )}
                     </td>
                     <td>
@@ -598,7 +561,12 @@ export default function DashboardPage() {
                           </select>
                         </div>
                       ) : (
-                        item.category
+                        <span
+                          className="category-badge"
+                          style={getCategoryBadgeStyle(item.categoryId, item.category, categories)}
+                        >
+                          {item.category}
+                        </span>
                       )}
                     </td>
                     <td>
@@ -642,7 +610,9 @@ export default function DashboardPage() {
                           </>
                         ) : (
                           <>
-                            <Link to={`/transactions/${item.id}`}>View</Link>
+                            <Link to={`/transactions/${item.id}`} className="action-link-button">
+                              View
+                            </Link>
                             <button type="button" onClick={() => startEditing(item)}>
                               Edit
                             </button>
@@ -693,11 +663,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="trend-chart" aria-label={`${trendPresentation.label} trend chart`}>
-            {trends.map((item) => (
+            {orderedTrends.map((item) => (
               <div key={`trend-chart-${item.month}`} className="trend-card">
                 <div className="trend-row-header">
-                  <span>{item.month}</span>
-                  <strong>{formatCurrency(item[trendMetric])}</strong>
+                  <span>{formatMonthLabel(item.month)}</span>
+                  <strong className={trendMetric === "balance" ? getBalanceValueClass(item.balance) : undefined}>
+                    {formatCurrency(item[trendMetric])}
+                  </strong>
                 </div>
                 <div className="breakdown-bar-shell trend-bar-shell">
                   <div
@@ -707,7 +679,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {!trends.length ? <p className="muted">No trend data available.</p> : null}
+            {!orderedTrends.length ? <p className="muted">No trend data available.</p> : null}
           </div>
         </div>
 
@@ -716,21 +688,51 @@ export default function DashboardPage() {
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Income</th>
-                <th>Expenses</th>
-                <th>Balance</th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("income")}
+                    aria-label={`Sort by Income (${getTrendSortLabel("income")})`}
+                  >
+                    Income
+                    {trendSort?.key === "income" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("expenses")}
+                    aria-label={`Sort by Expenses (${getTrendSortLabel("expenses")})`}
+                  >
+                    Expenses
+                    {trendSort?.key === "expenses" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("balance")}
+                    aria-label={`Sort by Balance (${getTrendSortLabel("balance")})`}
+                  >
+                    Balance
+                    {trendSort?.key === "balance" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {trends.map((item) => (
+              {sortedTrendRows.map((item) => (
                 <tr key={item.month}>
-                  <td>{item.month}</td>
+                  <td>{formatMonthLabel(item.month)}</td>
                   <td>{formatCurrency(item.income)}</td>
                   <td>{formatCurrency(item.expenses)}</td>
-                  <td>{formatCurrency(item.balance)}</td>
+                  <td className={getBalanceValueClass(item.balance)}>{formatCurrency(item.balance)}</td>
                 </tr>
               ))}
-              {!trends.length ? (
+              {!sortedTrendRows.length ? (
                 <tr>
                   <td colSpan={4}>No trend data available.</td>
                 </tr>

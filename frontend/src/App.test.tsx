@@ -130,9 +130,7 @@ describe("App", () => {
 
     renderApp(["/"]);
 
-    expect(
-      await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Expense Tracker" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
     const transactionsCard = screen.getByText("Total Transactions").closest("article");
     const categoriesCard = screen.getByText("Total Categories").closest("article");
@@ -174,6 +172,7 @@ describe("App", () => {
         data: {
           id: "cat-2",
           name: "Travel",
+          type: "expense",
           color: "#f97316",
           description: "Trips",
           updatedAt: "2026-09-20T00:00:00.000Z"
@@ -185,6 +184,7 @@ describe("App", () => {
           {
             id: "cat-1",
             name: "Groceries",
+            type: "expense",
             color: "#10b981",
             description: "Food",
             updatedAt: "2026-09-18T00:00:00.000Z"
@@ -192,6 +192,7 @@ describe("App", () => {
           {
             id: "cat-2",
             name: "Travel",
+            type: "expense",
             color: "#f97316",
             description: "Trips",
             updatedAt: "2026-09-20T00:00:00.000Z"
@@ -202,12 +203,14 @@ describe("App", () => {
 
     renderApp(["/categories"]);
 
-    expect(await screen.findByRole("heading", { name: "Manage Categories" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Manage Expense & Income Categories" })).toBeInTheDocument();
     expect(await screen.findByText("Groceries")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Travel" } });
+    fireEvent.change(screen.getByLabelText("New Category Name"), { target: { value: "Travel" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Trips" } });
-    fireEvent.change(screen.getByLabelText("Color"), { target: { value: "#f97316" } });
+      fireEvent.change(document.querySelector('input[type="color"]') as HTMLInputElement, {
+        target: { value: "#f97316" }
+      });
     fireEvent.click(screen.getByRole("button", { name: "Save Category" }));
 
     await waitFor(() => {
@@ -220,6 +223,7 @@ describe("App", () => {
     expect(postCall.headers.Authorization).toBe("Bearer test-token");
     expect(JSON.parse(String(postCall.data))).toEqual({
       name: "Travel",
+      type: "expense",
       color: "#f97316",
       description: "Trips"
     });
@@ -252,6 +256,7 @@ describe("App", () => {
       {
         id: "cat-1",
         name: "Groceries",
+        type: "expense",
         color: "#10b981",
         description: "Food",
         updatedAt: "2026-09-18T00:00:00.000Z"
@@ -259,6 +264,7 @@ describe("App", () => {
       {
         id: "cat-2",
         name: "Salary",
+        type: "income",
         color: "#2563eb",
         description: "Income",
         updatedAt: "2026-09-19T00:00:00.000Z"
@@ -289,8 +295,7 @@ describe("App", () => {
 
     fireEvent.change(screen.getByLabelText("Type"), { target: { value: "income" } });
     fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "1200" } });
-    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Salary" } });
-    fireEvent.change(screen.getByLabelText("Existing Category"), { target: { value: "cat-2" } });
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "cat-2" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Payday" } });
     fireEvent.click(screen.getByRole("button", { name: "Save Transaction" }));
 

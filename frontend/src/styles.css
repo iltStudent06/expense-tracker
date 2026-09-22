@@ -330,6 +330,14 @@ button {
   margin: 0;
 }
 
+.value-positive {
+  color: #10b981;
+}
+
+.value-negative {
+  color: #ef4444;
+}
+
 .error {
   color: #b91c1c;
   margin: 8px 0 16px;
@@ -355,6 +363,20 @@ td {
   padding: 8px;
   border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
+}
+
+.table-sort-button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.table-sort-button:hover {
+  text-decoration: underline;
 }
 
 td .actions {
@@ -388,6 +410,12 @@ td select {
 .cell-stack {
   display: grid;
   gap: 8px;
+}
+
+.color-input-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .category-cell {
@@ -430,6 +458,17 @@ td select {
   color: #6b7280;
   border-color: #9ca3af;
   text-transform: none;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .color-chip-row {

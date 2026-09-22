@@ -18,6 +18,7 @@ export interface LoginPayloadInput {
 
 export interface CategoryPayloadInput {
   name?: unknown;
+  type?: unknown;
   color?: unknown;
   description?: unknown;
 }
@@ -53,6 +54,7 @@ export function toPublicUser(document: { _id: { toString(): string }; name: stri
 export function toPublicCategory(document: {
   _id: { toString(): string };
   name: string;
+  type?: "income" | "expense";
   color: string;
   description?: string;
   ownerUserId?: mongoose.Types.ObjectId | string;
@@ -62,6 +64,7 @@ export function toPublicCategory(document: {
   return {
     id: document._id.toString(),
     name: document.name,
+    type: document.type ?? "expense",
     color: document.color,
     description: document.description ?? "",
     ownerUserId: document.ownerUserId ? document.ownerUserId.toString() : null,
@@ -147,7 +150,7 @@ export function normalizeLoginPayload(payload: LoginPayloadInput) {
 }
 
 export function normalizeCategoryPayload(payload: CategoryPayloadInput) {
-  const { name, color = "#2563eb", description = "" } = payload;
+  const { name, type = "expense", color = "#2563eb", description = "" } = payload;
 
   if (typeof name !== "string" || name.trim().length === 0) {
     return { error: "name is required" } as const;
@@ -157,9 +160,14 @@ export function normalizeCategoryPayload(payload: CategoryPayloadInput) {
     return { error: "color is required" } as const;
   }
 
+  if (type !== "income" && type !== "expense") {
+    return { error: "type must be either 'income' or 'expense'" } as const;
+  }
+
   return {
     value: {
       name: name.trim(),
+      type,
       color: color.trim(),
       description: typeof description === "string" ? description.trim() : ""
     }

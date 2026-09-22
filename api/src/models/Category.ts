@@ -3,6 +3,7 @@ import { HydratedDocument, InferSchemaType, Schema, Types, model } from "mongoos
 const categorySchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
+    type: { type: String, enum: ["income", "expense"], default: "expense", required: true },
     color: { type: String, required: true, trim: true },
     description: { type: String, default: "", trim: true },
     ownerUserId: { type: Schema.Types.ObjectId, ref: "User", required: true }

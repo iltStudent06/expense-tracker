@@ -70,19 +70,18 @@ The README is strong on setup and architecture, but it is still missing some fin
 
 ---
 
-### CAP-004 — Automate frontend deployment to ECR/EKS
-**Description**
-CI builds the frontend image, but the only deployment workflow in the repo targets the API. The frontend deployment still looks manual.
+### ✅ CAP-004 — Automate frontend deployment to ECR/EKS — COMPLETE
+**Status**
+Completed in the current branch. The repo now includes a dedicated frontend deployment workflow for ECR/EKS with rollout verification and supporting documentation.
 
-**Evidence**
-- CI builds the frontend Docker image.
-- The existing deployment workflow is API-only.
-- Kubernetes already has a frontend deployment manifest waiting for an image update path.
-- See [/.github/workflows/ci.yml](.github/workflows/ci.yml), [/.github/workflows/deploy-api.yml](.github/workflows/deploy-api.yml), and [k8s/expense-frontend-deployment.yaml](k8s/expense-frontend-deployment.yaml).
+**Implementation evidence**
+- Frontend deployment workflow added in [/.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml).
+- Workflow builds, scans, pushes, and deploys the frontend image, then verifies rollout with `kubectl rollout status`.
+- Required GitHub Actions secrets and variables documented in [README.md](README.md) and [DEPLOYMENT.md](DEPLOYMENT.md).
 
-**Acceptance criteria**
+**Acceptance criteria met**
 - Add a GitHub Actions workflow that builds and pushes the frontend image to ECR.
-- Update the `expense-frontend` deployment image automatically, or create one full-stack deployment workflow.
+- Update the `expense-frontend` deployment image automatically.
 - Document required GitHub secrets/variables.
 - Verify rollout success in the workflow output.
 
