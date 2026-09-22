@@ -258,12 +258,16 @@ The repository now includes:
 	- `/app/` to the frontend service
 	- `/api/` to the API service
 
+This ingress-based route is the intended production entrypoint for the app.
+
 ### Why this is the preferred setup
 
 - keeps the API service internal as `ClusterIP`
 - lets the ingress controller handle public traffic
 - preserves the same path-based routing already used in Docker Compose
 - makes TLS and domain routing easier later
+
+Because the frontend container image still includes a Docker Compose-oriented `/api/` proxy, the EKS deployment should be accessed through the Kubernetes ingress or ingress load balancer, not by browsing directly to the frontend service load balancer.
 
 ### Suggested frontend rollout flow
 
@@ -396,6 +400,8 @@ The workflows can create namespace `expense-dashboard` automatically because the
 
 However, the API deployment also depends on the Kubernetes secret `expense-api-secrets`, which is namespaced. That secret must exist in `expense-dashboard` before the API pods can start successfully.
 
+The API deployment workflow applies the in-cluster MongoDB manifest automatically before rolling out the API.
+
 Safe first-deploy order:
 
 1. create the namespace once with `kubectl apply -f k8s/namespace.yaml`
@@ -411,6 +417,7 @@ Before triggering the workflows, verify:
 - `AWS_ROLE_TO_ASSUME` exists in GitHub secrets
 - ECR repositories `capstone-api` and `capstone-frontend` exist
 - EKS cluster `expense-dashboard-capstone` exists
+- an ingress controller that supports class `nginx` is installed in the cluster
 - namespace `expense-dashboard` exists or can be created
 - API secret `expense-api-secrets` exists in namespace `expense-dashboard`
 
