@@ -239,6 +239,8 @@ So the current k8s setup is full-stack and deployable, but TLS and autoscaling w
 
 The frontend is currently production-ready in Docker because it is built by Vite and served by Nginx.
 
+The repository now also includes an automated frontend deployment workflow at [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml).
+
 ### Current runtime behavior
 
 - `/` serves the landing page
@@ -256,6 +258,8 @@ The repository now includes:
 	- `/app/` to the frontend service
 	- `/api/` to the API service
 
+This ingress-based route is the intended production entrypoint for the app.
+
 ### Why this is the preferred setup
 
 - keeps the API service internal as `ClusterIP`
@@ -263,13 +267,150 @@ The repository now includes:
 - preserves the same path-based routing already used in Docker Compose
 - makes TLS and domain routing easier later
 
+Because the frontend container image still includes a Docker Compose-oriented `/api/` proxy, the EKS deployment should be accessed through the Kubernetes ingress or ingress load balancer, not by browsing directly to the frontend service load balancer.
+
 ### Suggested frontend rollout flow
 
-1. build and tag the frontend image
-2. push it to the container registry
-3. deploy/update the frontend `Deployment`
-4. attach it to an internal `Service`
-5. route public traffic through `Ingress`
+1. trigger `deploy-frontend.yml` manually or by pushing a `v*` tag
+2. build and tag the frontend image from `frontend/Dockerfile`
+3. scan the image with Trivy
+4. push it to the configured Amazon ECR repository
+5. apply/update the frontend `Deployment`, `Service`, and `Ingress`
+6. update the `expense-frontend` image with `kubectl set image`
+7. wait for `kubectl rollout status` success and inspect frontend pods
+
+### GitHub Actions configuration for frontend deployment
+
+The frontend deployment workflow is currently pinned to AWS region `us-east-1`.
+The deployment workflows are currently pinned to EKS cluster `expense-dashboard-capstone`.
+The deployment workflows are currently pinned to Kubernetes namespace `expense-dashboard`.
+The frontend deployment workflow is currently pinned to ECR repository `capstone-frontend`.
+The deployment workflows are currently pinned to IAM role `arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy` for GitHub Actions OIDC authentication.
+
+### Link the AWS account to the GitHub repository
+
+The deployment workflows use GitHub Actions OIDC. That means GitHub does not need long-lived AWS access keys in the repository. Instead, GitHub requests a short-lived AWS token by assuming an IAM role.
+
+Repository scope for this project:
+
+- GitHub repository: `iltStudent06/expense-tracker`
+- AWS region: `us-east-1`
+- EKS cluster: `expense-dashboard-capstone`
+- Kubernetes namespace: `expense-dashboard`
+- API ECR repository: `capstone-api`
+- Frontend ECR repository: `capstone-frontend`
+
+#### 1. Create the GitHub OIDC identity provider in AWS IAM
+
+In AWS Console:
+
+1. Open IAM.
+2. Go to Identity providers.
+3. Add provider.
+4. Provider type: `OpenID Connect`.
+5. Provider URL: `https://token.actions.githubusercontent.com`.
+6. Audience: `sts.amazonaws.com`.
+
+If this provider already exists in the account, reuse it.
+
+#### 2. Create an IAM role for GitHub Actions
+
+Create a role that trusts the GitHub OIDC provider and allows this repository to assume it.
+
+Recommended trust policy:
+
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+			},
+			"Action": "sts:AssumeRoleWithWebIdentity",
+			"Condition": {
+				"StringEquals": {
+					"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+				},
+				"StringLike": {
+					"token.actions.githubusercontent.com:sub": "repo:iltStudent06/expense-tracker:*"
+				}
+			}
+		}
+	]
+}
+```
+
+If you want to lock deployment down further later, you can narrow the `sub` condition to specific branches or tags.
+
+#### 3. Attach AWS permissions to that role
+
+The role needs permission to:
+
+- push images to ECR repositories `capstone-api` and `capstone-frontend`
+- read the EKS cluster description for `expense-dashboard-capstone`
+- use `kubectl` against the cluster after AWS authentication succeeds
+
+At minimum, the IAM policy should allow these AWS API actions:
+
+- `ecr:GetAuthorizationToken`
+- `ecr:BatchCheckLayerAvailability`
+- `ecr:InitiateLayerUpload`
+- `ecr:UploadLayerPart`
+- `ecr:CompleteLayerUpload`
+- `ecr:PutImage`
+- `ecr:BatchGetImage`
+- `ecr:DescribeRepositories`
+- `eks:DescribeCluster`
+
+#### 4. Grant that IAM role access to the EKS cluster
+
+AWS IAM permission alone is not enough for `kubectl`. The role also needs Kubernetes access inside the EKS cluster.
+
+Use one of these approaches:
+
+- create an EKS access entry for the role, or
+- map the role in the cluster auth configuration if your cluster still uses that older pattern
+
+The role must be allowed to create/update resources in namespace `expense-dashboard`.
+
+#### 5. Confirm the workflow role ARN
+
+The repository workflows now reference the deploy role ARN directly in code:
+
+```text
+arn:aws:iam::180294218913:role/github-actions-expense-tracker-deploy
+```
+
+So no GitHub Actions secret is required for the role ARN unless you choose to move it back into repository secrets later.
+
+#### 6. First deploy prerequisite for the API
+
+The workflows can create namespace `expense-dashboard` automatically because they apply [k8s/namespace.yaml](k8s/namespace.yaml).
+
+However, the API deployment also depends on the Kubernetes secret `expense-api-secrets`, which is namespaced. That secret must exist in `expense-dashboard` before the API pods can start successfully.
+
+The API deployment workflow applies the in-cluster MongoDB manifest automatically before rolling out the API.
+
+Safe first-deploy order:
+
+1. create the namespace once with `kubectl apply -f k8s/namespace.yaml`
+2. create `expense-api-secrets` in namespace `expense-dashboard`
+3. run the API deployment workflow
+4. run the frontend deployment workflow
+
+#### 7. Quick verification checklist
+
+Before triggering the workflows, verify:
+
+- the IAM OIDC provider exists
+- the workflow role ARN still matches the created IAM role
+- ECR repositories `capstone-api` and `capstone-frontend` exist
+- EKS cluster `expense-dashboard-capstone` exists
+- an ingress controller that supports class `nginx` is installed in the cluster
+- namespace `expense-dashboard` exists or can be created
+- API secret `expense-api-secrets` exists in namespace `expense-dashboard`
 
 ### Important routing note
 
