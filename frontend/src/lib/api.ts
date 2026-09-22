@@ -170,6 +170,4 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 
 export function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Request failed";
-  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
 }
-
