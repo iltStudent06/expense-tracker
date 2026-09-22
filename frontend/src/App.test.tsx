@@ -47,7 +47,7 @@ describe("App", () => {
 
     const fetchMock = vi.mocked(globalThis.fetch);
     fetchMock.mockImplementation((path: string | URL | Request, options: RequestInit = {}) => {
-      if (typeof path === "string" && path.startsWith("/api/transactions?month=")) {
+      if (path === "/api/transactions") {
         return Promise.resolve(
           createJsonResponse([
             {

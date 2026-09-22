@@ -43,7 +43,12 @@ router.get(
   "/",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const documents = await CategoryModel.find(buildCategoryQuery({ name: req.query.name }))
+    const ownerUserId = getAuthUserId(req);
+    const isAdmin = req.user?.role === "admin";
+
+    const documents = await CategoryModel.find(
+      buildCategoryQuery({ name: req.query.name, ownerUserId: isAdmin ? null : ownerUserId })
+    )
       .sort({ updatedAt: -1 })
       .lean();
 
@@ -60,9 +65,16 @@ router.get(
       return res.status(400).json({ error: parsed.error });
     }
 
+    const ownerUserId = getAuthUserId(req);
+    const isAdmin = req.user?.role === "admin";
+
     const document = await CategoryModel.findById(parsed.value).lean();
     if (!document) {
       return res.status(404).json({ error: "category not found" });
+    }
+
+    if (!isAdmin && document.ownerUserId.toString() !== ownerUserId) {
+      return res.status(403).json({ error: "you do not have permission to view this category" });
     }
 
     return res.status(200).json(toPublicCategory(document));

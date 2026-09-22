@@ -158,7 +158,7 @@ The application enforces role-based authorization on protected routes:
 ### Protected operations
 
 **Category operations:**
-- **Read (GET /api/categories, GET /api/categories/:id)** — Requires authentication. Any authenticated user can view the shared category library.
+- **Read (GET /api/categories, GET /api/categories/:id)** — Requires authentication. Regular users can view only their own categories; admins can view all categories.
 - **Create (POST /api/categories)** — Requires authentication. Any user can create categories.
 - **Update (PUT /api/categories/:id)** — Requires authentication and ownership. Users can only update their own.
 - **Delete (DELETE /api/categories/:id)** — Requires either:
@@ -168,7 +168,7 @@ The application enforces role-based authorization on protected routes:
   Non-owners receive `403 Forbidden` with error: `"admin role required to delete other users' categories"`
 
 **Transaction operations:**
-- **Read (GET /api/transactions, GET /api/transactions/:id)** — Requires authentication. Any authenticated user can view shared transactions.
+- **Read (GET /api/transactions, GET /api/transactions/:id)** — Requires authentication. Regular users can view only their own transactions; admins can view all transactions.
 - **Create/Update/Delete** — Requires authentication and ownership. Users can only modify their own transactions; admins cannot bypass ownership.
 
 ### Dashboard visibility

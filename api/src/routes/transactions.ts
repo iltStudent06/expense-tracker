@@ -75,15 +75,19 @@ router.get(
   "/",
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (!getAuthUserId(req)) {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
       return res.status(401).json({ error: "authorization token required" });
     }
+
+    const isAdmin = req.user?.role === "admin";
 
     const documents = await TransactionModel.find(
       buildTransactionQuery({
         type: req.query.type,
         category: req.query.category,
-        month: req.query.month
+        month: req.query.month,
+        ownerUserId: isAdmin ? null : ownerUserId
       })
     )
       .sort({ date: -1 })
@@ -97,7 +101,8 @@ router.get(
   "/:id",
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (!getAuthUserId(req)) {
+    const ownerUserId = getAuthUserId(req);
+    if (!ownerUserId) {
       return res.status(401).json({ error: "authorization token required" });
     }
 
@@ -106,9 +111,15 @@ router.get(
       return res.status(400).json({ error: parsed.error });
     }
 
+    const isAdmin = req.user?.role === "admin";
+
     const document = await TransactionModel.findById(parsed.value).lean();
     if (!document) {
       return res.status(404).json({ error: "transaction not found" });
+    }
+
+    if (!isAdmin && document.ownerUserId.toString() !== ownerUserId) {
+      return res.status(403).json({ error: "you do not have permission to view this transaction" });
     }
 
     return res.status(200).json(await populateTransactionCategory(document));

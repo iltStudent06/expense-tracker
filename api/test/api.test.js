@@ -232,7 +232,7 @@ describe("Expense Dashboard API", () => {
     assert.equal(getUserCat.status, 404);
   });
 
-  test("allows authenticated users to view shared categories", async () => {
+  test("keeps regular users on their own categories and allows admins to see all", async () => {
     // Create a second user
     const user2RegisterResponse = await request(app).post("/api/auth/register").send({
       name: "User 2",
@@ -257,22 +257,22 @@ describe("Expense Dashboard API", () => {
     assert.equal(user1CategoryResponse.status, 201);
     const user1CategoryId = user1CategoryResponse.body.id;
 
-    // User 2 can view shared categories
+    // User 2 should NOT be able to view User 1's category
     const unauthorizedViewResponse = await request(app)
       .get(`/api/categories/${user1CategoryId}`)
       .set("Authorization", `Bearer ${user2Token}`);
 
-    assert.equal(unauthorizedViewResponse.status, 200);
-    assert.equal(unauthorizedViewResponse.body.id, user1CategoryId);
+    assert.equal(unauthorizedViewResponse.status, 403);
+    assert.equal(unauthorizedViewResponse.body.error, "you do not have permission to view this category");
 
-    // User 2's category list should include User 1's category as a shared category
+    // User 2's category list should not include User 1's category
     const user2CategoriesResponse = await request(app)
       .get("/api/categories")
       .set("Authorization", `Bearer ${user2Token}`);
 
     assert.equal(user2CategoriesResponse.status, 200);
     const hasUser1Category = user2CategoriesResponse.body.some(c => c.id === user1CategoryId);
-    assert.equal(hasUser1Category, true, "User 2 should see shared categories");
+    assert.equal(hasUser1Category, false, "User 2 should not see User 1's category");
 
     // Admin SHOULD also be able to view User 1's category
     const adminViewResponse = await request(app)
@@ -292,7 +292,7 @@ describe("Expense Dashboard API", () => {
     assert.equal(adminHasUser1Category, true, "Admin should see all categories from all users");
   });
 
-  test("allows authenticated users to view shared transactions", async () => {
+  test("keeps regular users on their own transactions and allows admins to see all", async () => {
     // Create a second user
     const user2RegisterResponse = await request(app).post("/api/auth/register").send({
       name: "User 2",
@@ -304,13 +304,13 @@ describe("Expense Dashboard API", () => {
     assert.equal(user2RegisterResponse.status, 201);
     const user2Token = user2RegisterResponse.body.token;
 
-    // User 1's transaction should be visible to User 2
+    // User 2 should NOT be able to view User 1's transaction
     const user2TransactionResponse = await request(app)
       .get(`/api/transactions/${transactionId}`)
       .set("Authorization", `Bearer ${user2Token}`);
 
-    assert.equal(user2TransactionResponse.status, 200);
-    assert.equal(user2TransactionResponse.body.id, transactionId);
+    assert.equal(user2TransactionResponse.status, 403);
+    assert.equal(user2TransactionResponse.body.error, "you do not have permission to view this transaction");
 
     const user2TransactionsResponse = await request(app)
       .get("/api/transactions")
@@ -318,7 +318,7 @@ describe("Expense Dashboard API", () => {
 
     assert.equal(user2TransactionsResponse.status, 200);
     const hasTransaction = user2TransactionsResponse.body.some((item) => item.id === transactionId);
-    assert.equal(hasTransaction, true, "User 2 should see shared transactions");
+    assert.equal(hasTransaction, false, "User 2 should not see User 1's transaction");
 
     // Admin should also be able to view User 1's transaction
     const adminTransactionResponse = await request(app)
