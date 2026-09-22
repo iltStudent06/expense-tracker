@@ -8,6 +8,7 @@ let app;
 let closeDatabaseConnection;
 let authToken;
 let secondUserToken;
+let adminToken;
 let categoryId;
 let transactionId;
 
@@ -221,6 +222,76 @@ describe("Expense Dashboard API", () => {
     assert.equal(dashboardResponse.body.recentTransactions[0].id, transactionId);
   });
 
+  test("enforces role-based access control on category deletion", async () => {
+    // Create an admin user
+    const adminRegisterResponse = await request(app).post("/api/auth/register").send({
+      name: "Admin User",
+      email: "admin@example.com",
+      password: "secret123",
+      role: "admin"
+    });
+
+    assert.equal(adminRegisterResponse.status, 201);
+    adminToken = adminRegisterResponse.body.token;
+
+    // Create a category as admin
+    const adminCategoryResponse = await request(app)
+      .post("/api/categories")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Admin Category",
+        color: "#ef4444",
+        description: "Category owned by admin"
+      });
+
+    assert.equal(adminCategoryResponse.status, 201);
+    const adminCategoryId = adminCategoryResponse.body.id;
+
+    // Create a category as regular user
+    const userCategoryResponse = await request(app)
+      .post("/api/categories")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({
+        name: "User Category",
+        color: "#3b82f6",
+        description: "Category owned by regular user"
+      });
+
+    assert.equal(userCategoryResponse.status, 201);
+    const userCategoryId = userCategoryResponse.body.id;
+
+    // Regular user should NOT be able to delete admin's category (403)
+    const unauthorizedDeleteResponse = await request(app)
+      .delete(`/api/categories/${adminCategoryId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+
+    assert.equal(unauthorizedDeleteResponse.status, 403);
+    assert.equal(unauthorizedDeleteResponse.body.error, "admin role required to delete other users' categories");
+
+    // Regular user SHOULD be able to delete their own category
+    const ownDeleteResponse = await request(app)
+      .delete(`/api/categories/${userCategoryId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+
+    assert.equal(ownDeleteResponse.status, 200);
+    assert.equal(ownDeleteResponse.body.id, userCategoryId);
+
+    // Admin should be able to delete any category (even another user's)
+    const adminDeleteResponse = await request(app)
+      .delete(`/api/categories/${adminCategoryId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminDeleteResponse.status, 200);
+    assert.equal(adminDeleteResponse.body.id, adminCategoryId);
+
+    // Verify both are deleted
+    const getAdminCat = await request(app).get(`/api/categories/${adminCategoryId}`);
+    assert.equal(getAdminCat.status, 404);
+
+    const getUserCat = await request(app).get(`/api/categories/${userCategoryId}`);
+    assert.equal(getUserCat.status, 404);
+  });
+
   test("logs in and deletes seeded test records", async () => {
     const loginResponse = await request(app).post("/api/auth/login").send({
       email: "test@example.com",
@@ -235,6 +306,7 @@ describe("Expense Dashboard API", () => {
       .set("Authorization", `Bearer ${loginResponse.body.token}`);
     assert.equal(deleteTransactionResponse.status, 200);
 
+    // Original category owner can delete their own category
     const deleteCategoryResponse = await request(app)
       .delete(`/api/categories/${categoryId}`)
       .set("Authorization", `Bearer ${loginResponse.body.token}`);

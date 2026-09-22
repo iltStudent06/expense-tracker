@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
@@ -47,7 +47,16 @@ describe("App", () => {
 
     const fetchMock = vi.mocked(globalThis.fetch);
     fetchMock.mockImplementation((path: string | URL | Request, options: RequestInit = {}) => {
-      if (typeof path === "string" && path.startsWith("/api/transactions?month=")) {
+      const url =
+        typeof path === "string"
+          ? path
+          : path instanceof Request
+            ? path.url
+            : path.toString();
+      const parsedUrl = new URL(url, "http://localhost");
+      const route = `${parsedUrl.pathname}${parsedUrl.search}`;
+
+      if (route === "/api/transactions") {
         return Promise.resolve(
           createJsonResponse([
             {
@@ -56,6 +65,7 @@ describe("App", () => {
               amount: 45.25,
               category: "Groceries",
               categoryId: "cat-1",
+              ownerUserId: "user-1",
               description: "Weekly shopping",
               date: "2026-09-18T00:00:00.000Z"
             }
@@ -63,7 +73,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/summary?month=2026-09") {
+      if (route === "/api/summary?month=2026-09") {
         return Promise.resolve(
           createJsonResponse({
             totals: { income: 2500, expenses: 45.25, balance: 2454.75 }
@@ -71,7 +81,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/trends?months=6") {
+      if (route === "/api/trends?months=6") {
         return Promise.resolve(
           createJsonResponse({
             trends: [{ month: "2026-09", income: 2500, expenses: 45.25, balance: 2454.75 }]
@@ -79,7 +89,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/dashboard") {
+      if (route === "/api/dashboard") {
         return Promise.resolve(
           createJsonResponse({
             totals: { transactions: 1, users: 1, categories: 2 },
@@ -88,7 +98,7 @@ describe("App", () => {
         );
       }
 
-      if (path === "/api/categories") {
+      if (route === "/api/categories") {
         const headers = new Headers(options.headers);
         expect(headers.get("Authorization")).toBe("Bearer test-token");
         return Promise.resolve(
@@ -98,14 +108,8 @@ describe("App", () => {
               name: "Groceries",
               color: "#10b981",
               description: "Food",
+              ownerUserId: "user-1",
               updatedAt: "2026-09-18T00:00:00.000Z"
-            },
-            {
-              id: "cat-2",
-              name: "Utilities",
-              color: "#2563eb",
-              description: "Bills",
-              updatedAt: "2026-09-19T00:00:00.000Z"
             }
           ])
         );
@@ -120,8 +124,14 @@ describe("App", () => {
       await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
-    expect(screen.getByText("Total Categories")).toBeInTheDocument();
-    expect(await screen.findByText("2")).toBeInTheDocument();
+    const transactionsCard = screen.getByText("Total Transactions").closest("article");
+    const categoriesCard = screen.getByText("Total Categories").closest("article");
+
+    expect(transactionsCard).not.toBeNull();
+    expect(categoriesCard).not.toBeNull();
+
+    expect(within(transactionsCard as HTMLElement).getByText("1")).toBeInTheDocument();
+    expect(within(categoriesCard as HTMLElement).getByText("1")).toBeInTheDocument();
     expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
     expect((await screen.findAllByText("$2,454.75")).length).toBeGreaterThan(0);
   });

@@ -312,6 +312,14 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.dashboard-stats-user {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-stats-admin {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -563,7 +571,9 @@ td select {
   .form,
   .grid,
   .filter-grid,
-  .grid-2 {
+  .grid-2,
+  .dashboard-stats-user,
+  .dashboard-stats-admin {
     grid-template-columns: 1fr;
   }
 

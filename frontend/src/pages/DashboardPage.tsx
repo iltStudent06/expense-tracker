@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { loadAuthSession } from "../lib/auth";
 import { getErrorMessage, request } from "../lib/api";
 
 type TransactionType = "income" | "expense";
@@ -21,6 +22,7 @@ interface Transaction {
   amount: number;
   category: string;
   categoryId: string | null;
+  ownerUserId?: string | null;
   description: string;
   date: string;
   categoryDetails?: Category | null;
@@ -117,7 +119,18 @@ function getTrendPresentation(metric: TrendMetric) {
   return { label: "Balance", className: "balance", accent: "#2563eb" };
 }
 
+function isSameMonth(isoDate: string, month: string) {
+  if (!month) {
+    return true;
+  }
+
+  return new Date(isoDate).toISOString().slice(0, 7) === month;
+}
+
 export default function DashboardPage() {
+  const session = loadAuthSession();
+  const isAdmin = session?.user.role === "admin";
+  const currentUserId = session?.user.id ?? null;
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
@@ -153,7 +166,7 @@ export default function DashboardPage() {
     try {
       const query = buildDashboardQuery(selectedMonth, selectedCategory);
       const [txData, summaryData, trendData, overviewData, categoryData] = await Promise.all([
-        request<Transaction[]>(`/api/transactions${query}`),
+        request<Transaction[]>("/api/transactions"),
         request<SummaryResponse>(`/api/summary${query}`),
         request<TrendsResponse>("/api/trends?months=6"),
         request<DashboardOverview>("/api/dashboard"),
@@ -280,10 +293,23 @@ export default function DashboardPage() {
   );
   const trendPresentation = getTrendPresentation(trendMetric);
   const maxTrendAmount = Math.max(1, ...trends.map((entry) => Math.abs(entry[trendMetric]) || 0));
+  const visibleCategoriesCount = isAdmin ? appTotals.categories : categories.length;
+  const visibleTransactionsCount = isAdmin ? appTotals.transactions : transactions.length;
 
   const orderedTransactions = useMemo(
     () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [transactions]
+  );
+
+  const visibleTransactions = useMemo(
+    () =>
+      orderedTransactions.filter((item) => {
+        const matchesMonth = isSameMonth(item.date, month);
+        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+
+        return matchesMonth && matchesCategory;
+      }),
+    [month, categoryFilter, orderedTransactions]
   );
 
   return (
@@ -297,18 +323,20 @@ export default function DashboardPage() {
         </p>
       </section>
 
-      <section className="grid">
+      <section className={`grid dashboard-stats ${isAdmin ? "dashboard-stats-admin" : "dashboard-stats-user"}`}>
         <article className="panel">
           <h3>Total Transactions</h3>
-          <p className="metric">{appTotals.transactions}</p>
+          <p className="metric">{visibleTransactionsCount}</p>
         </article>
-        <article className="panel">
-          <h3>Total Users</h3>
-          <p className="metric">{appTotals.users}</p>
-        </article>
+        {isAdmin ? (
+          <article className="panel">
+            <h3>Total Users</h3>
+            <p className="metric">{appTotals.users}</p>
+          </article>
+        ) : null}
         <article className="panel">
           <h3>Total Categories</h3>
-          <p className="metric">{appTotals.categories}</p>
+          <p className="metric">{visibleCategoriesCount}</p>
         </article>
       </section>
 
@@ -502,7 +530,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {orderedTransactions.map((item) => {
+              {visibleTransactions.map((item) => {
                 const isEditing = editingId === item.id;
 
                 return (
@@ -628,9 +656,9 @@ export default function DashboardPage() {
                   </tr>
                 );
               })}
-              {!orderedTransactions.length ? (
+              {!visibleTransactions.length ? (
                 <tr>
-                  <td colSpan={6}>No transactions for selected month.</td>
+                  <td colSpan={6}>No transactions for selected month or category.</td>
                 </tr>
               ) : null}
             </tbody>
