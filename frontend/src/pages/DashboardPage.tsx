@@ -351,7 +351,7 @@ export default function DashboardPage() {
           </label>
 
           <label>
-            Linked Category
+            Existing Category
             <select
               value={form.categoryId}
               onChange={(event) => {
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                               }));
                             }}
                           >
-                            <option value="">No linked category</option>
+                            <option value="">No existing category</option>
                             {categories.map((categoryOption) => (
                               <option key={categoryOption.id} value={categoryOption.id}>
                                 {categoryOption.name}

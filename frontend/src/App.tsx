@@ -77,7 +77,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 function AppShell() {
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated, signOut, session } = useAuth();
 
   return (
     <div className="app-shell">
@@ -85,7 +85,9 @@ function AppShell() {
         <div className="page topbar-inner">
           <Link to="/" className="brand-link" aria-label="Expense Tracker dashboard">
             <span className="brand-mark">$</span>
-            <span>Expense Tracker</span>
+            <span className="brand-copy">
+              <span className="brand-title">Expense Tracker</span>
+            </span>
           </Link>
 
           <nav className="topnav" aria-label="Primary navigation">
@@ -124,9 +126,12 @@ function AppShell() {
               </>
             )}
             {isAuthenticated ? (
-              <button type="button" className="topnav-button" onClick={signOut}>
-                Logout
-              </button>
+              <div className="topnav-account" aria-label="Signed in user">
+                <button type="button" className="topnav-button" onClick={signOut}>
+                  Logout
+                </button>
+                {session?.user ? <span className="topnav-user-meta">{session.user.name} · {session.user.role}</span> : null}
+              </div>
             ) : null}
           </nav>
         </div>

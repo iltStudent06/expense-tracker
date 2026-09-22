@@ -275,7 +275,7 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText("Type"), { target: { value: "income" } });
     fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "1200" } });
     fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Salary" } });
-    fireEvent.change(screen.getByLabelText("Linked Category"), { target: { value: "cat-2" } });
+    fireEvent.change(screen.getByLabelText("Existing Category"), { target: { value: "cat-2" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Payday" } });
     fireEvent.click(screen.getByRole("button", { name: "Save Transaction" }));
 
