@@ -26,6 +26,18 @@ function formatCurrency(amount: number) {
   }).format(amount || 0);
 }
 
+function getCategoryBadgeStyle(color?: string) {
+  if (!color) {
+    return undefined;
+  }
+
+  return {
+    color,
+    borderColor: color,
+    backgroundColor: `${color}1A`
+  };
+}
+
 export default function TransactionDetailPage() {
   const navigate = useNavigate();
   const { id: transactionId = "" } = useParams();
@@ -84,7 +96,15 @@ export default function TransactionDetailPage() {
 
           <article className="panel">
             <h2>Related Category</h2>
-            <p><strong>Name:</strong> {transaction.categoryDetails?.name ?? transaction.category}</p>
+            <p>
+              <strong>Name:</strong>{" "}
+              <span
+                className="category-badge"
+                style={getCategoryBadgeStyle(transaction.categoryDetails?.color)}
+              >
+                {transaction.categoryDetails?.name ?? transaction.category}
+              </span>
+            </p>
             <p><strong>Color:</strong> {transaction.categoryDetails?.color ?? "—"}</p>
             <p><strong>Description:</strong> {transaction.categoryDetails?.description ?? "—"}</p>
             <p>

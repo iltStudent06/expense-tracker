@@ -5,6 +5,8 @@ import { getErrorMessage, request } from "../lib/api";
 
 type TransactionType = "income" | "expense";
 type TrendMetric = "income" | "expenses" | "balance";
+type TrendSortKey = "income" | "expenses" | "balance";
+type SortDirection = "asc" | "desc";
 
 interface Category {
   id: string;
@@ -131,6 +133,22 @@ function getTrendPresentation(metric: TrendMetric) {
   return { label: "Balance", className: "balance", accent: "#2563eb" };
 }
 
+function getCategoryBadgeStyle(categoryId: string | null, categoryName: string, categories: Category[]) {
+  const matchedCategory =
+    categories.find((entry) => entry.id === categoryId) ??
+    categories.find((entry) => entry.name.toLowerCase() === categoryName.toLowerCase());
+
+  if (!matchedCategory?.color) {
+    return undefined;
+  }
+
+  return {
+    color: matchedCategory.color,
+    borderColor: matchedCategory.color,
+    backgroundColor: `${matchedCategory.color}1A`
+  };
+}
+
 function formatMonthLabel(monthKey: string) {
   const match = monthKey.match(/^(\d{4})-(\d{2})$/);
   if (!match) {
@@ -163,6 +181,7 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(getCurrentMonth());
   const [categoryFilter, setCategoryFilter] = useState("");
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("balance");
+  const [trendSort, setTrendSort] = useState<{ key: TrendSortKey; direction: SortDirection } | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [trends, setTrends] = useState<TrendEntry[]>([]);
@@ -288,8 +307,43 @@ export default function DashboardPage() {
   const trendPresentation = getTrendPresentation(trendMetric);
   const maxTrendAmount = Math.max(1, ...trends.map((entry) => Math.abs(entry[trendMetric]) || 0));
   const orderedTrends = useMemo(() => [...trends].reverse(), [trends]);
+  const sortedTrendRows = useMemo(() => {
+    if (!trendSort) {
+      return orderedTrends;
+    }
+
+    const multiplier = trendSort.direction === "asc" ? 1 : -1;
+
+    return [...orderedTrends].sort((a, b) => {
+      const delta = (a[trendSort.key] - b[trendSort.key]) * multiplier;
+
+      if (delta !== 0) {
+        return delta;
+      }
+
+      return new Date(b.month).getTime() - new Date(a.month).getTime();
+    });
+  }, [orderedTrends, trendSort]);
   const visibleCategoriesCount = isAdmin ? appTotals.categories : categories.length;
   const visibleTransactionsCount = isAdmin ? appTotals.transactions : transactions.length;
+
+  function handleTrendSort(column: TrendSortKey) {
+    setTrendSort((prev) => {
+      if (!prev || prev.key !== column) {
+        return { key: column, direction: "desc" };
+      }
+
+      return { key: column, direction: prev.direction === "desc" ? "asc" : "desc" };
+    });
+  }
+
+  function getTrendSortLabel(column: TrendSortKey) {
+    if (!trendSort || trendSort.key !== column) {
+      return "Not sorted";
+    }
+
+    return trendSort.direction === "asc" ? "Sorted ascending" : "Sorted descending";
+  }
 
   const orderedTransactions = useMemo(
     () => [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -507,7 +561,12 @@ export default function DashboardPage() {
                           </select>
                         </div>
                       ) : (
-                        item.category
+                        <span
+                          className="category-badge"
+                          style={getCategoryBadgeStyle(item.categoryId, item.category, categories)}
+                        >
+                          {item.category}
+                        </span>
                       )}
                     </td>
                     <td>
@@ -629,13 +688,43 @@ export default function DashboardPage() {
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Income</th>
-                <th>Expenses</th>
-                <th>Balance</th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("income")}
+                    aria-label={`Sort by Income (${getTrendSortLabel("income")})`}
+                  >
+                    Income
+                    {trendSort?.key === "income" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("expenses")}
+                    aria-label={`Sort by Expenses (${getTrendSortLabel("expenses")})`}
+                  >
+                    Expenses
+                    {trendSort?.key === "expenses" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => handleTrendSort("balance")}
+                    aria-label={`Sort by Balance (${getTrendSortLabel("balance")})`}
+                  >
+                    Balance
+                    {trendSort?.key === "balance" ? ` ${trendSort.direction === "asc" ? "↑" : "↓"}` : ""}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {orderedTrends.map((item) => (
+              {sortedTrendRows.map((item) => (
                 <tr key={item.month}>
                   <td>{formatMonthLabel(item.month)}</td>
                   <td>{formatCurrency(item.income)}</td>
@@ -643,7 +732,7 @@ export default function DashboardPage() {
                   <td className={getBalanceValueClass(item.balance)}>{formatCurrency(item.balance)}</td>
                 </tr>
               ))}
-              {!orderedTrends.length ? (
+              {!sortedTrendRows.length ? (
                 <tr>
                   <td colSpan={4}>No trend data available.</td>
                 </tr>

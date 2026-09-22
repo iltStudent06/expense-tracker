@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getErrorMessage, request } from "../lib/api";
 
 interface Category {
   id: string;
   name: string;
+  type: "income" | "expense";
   color: string;
   description: string;
   updatedAt: string;
@@ -11,23 +12,39 @@ interface Category {
 
 interface CategoryForm {
   name: string;
+  type: "income" | "expense";
   color: string;
   description: string;
 }
 
+function getCategoryBadgeStyle(color?: string) {
+  if (!color) {
+    return undefined;
+  }
+
+  return {
+    color,
+    borderColor: color,
+    backgroundColor: `${color}1A`
+  };
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [typeFilter, setTypeFilter] = useState<"" | "income" | "expense">("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CategoryForm>({
     name: "",
+    type: "expense",
     color: "#2563eb",
     description: ""
   });
   const [editForm, setEditForm] = useState<CategoryForm>({
     name: "",
+    type: "expense",
     color: "#2563eb",
     description: ""
   });
@@ -61,7 +78,7 @@ export default function CategoriesPage() {
         body: JSON.stringify(form)
       });
 
-      setForm({ name: "", color: "#2563eb", description: "" });
+      setForm({ name: "", type: "expense", color: "#2563eb", description: "" });
       await loadCategories();
     } catch (submitError) {
       setError(getErrorMessage(submitError));
@@ -74,6 +91,7 @@ export default function CategoriesPage() {
     setEditingId(category.id);
     setEditForm({
       name: category.name,
+      type: category.type,
       color: category.color,
       description: category.description || ""
     });
@@ -81,7 +99,7 @@ export default function CategoriesPage() {
 
   function cancelEditing() {
     setEditingId(null);
-    setEditForm({ name: "", color: "#2563eb", description: "" });
+    setEditForm({ name: "", type: "expense", color: "#2563eb", description: "" });
   }
 
   async function handleUpdate(categoryId: string) {
@@ -124,22 +142,42 @@ export default function CategoriesPage() {
     }
   }
 
+  const visibleCategories = useMemo(() => {
+    if (!typeFilter) {
+      return categories;
+    }
+
+    return categories.filter((category) => category.type === typeFilter);
+  }, [categories, typeFilter]);
+
   return (
     <main className="page">
       <section className="panel">
         <p className="eyebrow">Categories</p>
-        <h1>Manage Categories</h1>
+        <h1>Manage Expense & Income Categories</h1>
         <p className="section-copy">
-          Create and maintain the second core model used to organize transactions and show
-          model relationships in the app.
+          Create new expense and income categories to organize transactions.
         </p>
       </section>
 
       <section className="panel">
-        <h2>Create Category</h2>
+        <h2>Add New Category</h2>
         <form className="form" onSubmit={handleSubmit}>
           <label>
-            Name
+            Type
+            <select
+              value={form.type}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, type: event.target.value as "income" | "expense" }))
+              }
+            >
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </label>
+
+          <label>
+            New Category Name
             <input
               type="text"
               required
@@ -150,11 +188,21 @@ export default function CategoriesPage() {
 
           <label>
             Color
-            <input
-              type="color"
-              value={form.color}
-              onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
-            />
+            <span className="color-input-row">
+              <input
+                type="color"
+                value={form.color}
+                onChange={(event) => setForm((prev) => ({ ...prev, color: event.target.value }))}
+              />
+              <span className="color-chip-row" aria-live="polite">
+                <span
+                  className="color-chip"
+                  style={{ backgroundColor: form.color }}
+                  aria-hidden="true"
+                />
+                {form.color.toUpperCase()}
+              </span>
+            </span>
           </label>
 
           <label className="span-2">
@@ -179,11 +227,27 @@ export default function CategoriesPage() {
 
       <section className="panel">
         <h2>Category Library</h2>
+        <div className="filter-grid">
+          <label>
+            Type Filter
+            <select
+              value={typeFilter}
+              onChange={(event) =>
+                setTypeFilter(event.target.value as "" | "income" | "expense")
+              }
+            >
+              <option value="">All types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </label>
+        </div>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Type</th>
                 <th>Color</th>
                 <th>Description</th>
                 <th>Updated</th>
@@ -191,7 +255,7 @@ export default function CategoriesPage() {
               </tr>
             </thead>
             <tbody>
-              {categories.map((category) => {
+              {visibleCategories.map((category) => {
                 const isEditing = editingId === category.id;
 
                 return (
@@ -206,7 +270,27 @@ export default function CategoriesPage() {
                           }
                         />
                       ) : (
-                        category.name
+                        <span className="category-badge" style={getCategoryBadgeStyle(category.color)}>
+                          {category.name}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <select
+                          value={editForm.type}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              type: event.target.value as "income" | "expense"
+                            }))
+                          }
+                        >
+                          <option value="expense">Expense</option>
+                          <option value="income">Income</option>
+                        </select>
+                      ) : (
+                        <span className={`status-badge ${category.type}`}>{category.type}</span>
                       )}
                     </td>
                     <td>
@@ -269,9 +353,9 @@ export default function CategoriesPage() {
                   </tr>
                 );
               })}
-              {!categories.length ? (
+              {!visibleCategories.length ? (
                 <tr>
-                  <td colSpan={5}>No categories yet.</td>
+                  <td colSpan={6}>No categories yet.</td>
                 </tr>
               ) : null}
             </tbody>
