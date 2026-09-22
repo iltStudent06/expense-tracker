@@ -261,7 +261,8 @@ Compose environment overrides:
 Manifests provided:
 
 - `k8s/namespace.yaml`
-- `k8s/expense-storageclass.yaml`
+curl -I http://k8s-expensed-expensef-37724fa867-875ab8b1d3c14f97.elb.us-east-1.amazonaws.com
+curl -I http://k8s-expensed-expensef-37724fa867-875ab8b1d3c14f97.elb.us-east-1.amazonaws.com/app/- `k8s/expense-storageclass.yaml`
 - `k8s/expense-mongo.yaml`
 - `k8s/expense-api-deployment.yaml`
 - `k8s/expense-api-service.yaml`

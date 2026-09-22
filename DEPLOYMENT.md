@@ -168,7 +168,7 @@ The repository currently includes these API manifests:
 - deploy MongoDB inside the cluster with persistent storage
 - create an EKS Auto Mode EBS `StorageClass` for persistent volumes
 - expose the API internally through a `ClusterIP` service
-- expose the frontend publicly through a `LoadBalancer` service
+- expose the frontend publicly through an internet-facing `LoadBalancer` service
 - use readiness and liveness probes on `/health`
 - use frontend health checks on `/`
 - pull MongoDB credentials and connection settings from a Kubernetes secret
@@ -212,8 +212,8 @@ kubectl apply -f k8s/expense-api-service.yaml
 kubectl apply -f k8s/expense-frontend-deployment.yaml
 kubectl apply -f k8s/expense-frontend-service.yaml
 kubectl apply -f k8s/expense-ingress.yaml
-kubectl rollout status deployment/expense-mongo -n expense-dashboard --timeout=180s
-kubectl rollout status deployment/expense-api -n expense-dashboard --timeout=180s
+kubectl rollout status deployment/expense-mongo -n expense-dashboard --timeout=300s
+kubectl rollout status deployment/expense-api -n expense-dashboard --timeout=300s
 kubectl rollout status deployment/expense-frontend -n expense-dashboard --timeout=300s
 ```
 
