@@ -10,7 +10,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "seed": "node ../scripts/seed-transactions.js",
-    "test": "node --import tsx --test ../test/*.test.js"
+    "test": "node --import tsx --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"
