@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 // Runtime configuration: target API and source seed file can be overridden via env vars.
-const apiBaseUrl = process.env.API_URL ?? "http://localhost:3000";
+const apiBaseUrl = process.env.API_URL ?? "http://localhost:4000";
 const inputFile = process.env.SEED_FILE ?? "seed/transactions.json";
 const endpoint = `${apiBaseUrl.replace(/\/$/, "")}/api/transactions`;
 
