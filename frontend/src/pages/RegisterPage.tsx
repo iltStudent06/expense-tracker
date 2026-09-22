@@ -35,7 +35,7 @@ export default function RegisterPage() {
         <div className="auth-copy">
           <p className="eyebrow">Authentication</p>
           <h1>Register</h1>
-          <p>Create an account to access protected transaction actions.</p>
+          <p>Enter your information below to create a new account.</p>
         </div>
       </section>
 
@@ -83,12 +83,12 @@ export default function RegisterPage() {
           {error ? <p className="error">{error}</p> : null}
 
           <div className="auth-actions">
-            <Link to="/login" className="button-secondary">
-              Have an account?
-            </Link>
             <button type="submit" className="button-primary" disabled={loading}>
               {loading ? "Creating..." : "Create account"}
             </button>
+            <Link to="/login" className="button-secondary">
+              Sign in
+            </Link>
           </div>
         </form>
       </section>

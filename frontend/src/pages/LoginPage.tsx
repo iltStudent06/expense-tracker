@@ -35,7 +35,7 @@ export default function LoginPage() {
         <div className="auth-copy">
           <p className="eyebrow">Authentication</p>
           <h1>Login</h1>
-          <p>Sign in to manage expense transactions and budgets.</p>
+          <p className="login-subtitle">Sign in with your email and password to manage expense transactions and budgets.</p>
         </div>
       </section>
 
