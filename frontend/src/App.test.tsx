@@ -130,9 +130,7 @@ describe("App", () => {
 
     renderApp(["/"]);
 
-    expect(
-      await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Expense Tracker" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
     const transactionsCard = screen.getByText("Total Transactions").closest("article");
     const categoriesCard = screen.getByText("Total Categories").closest("article");
