@@ -78,7 +78,9 @@ interface TransactionForm {
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD"
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount || 0);
 }
 
@@ -387,6 +389,11 @@ export default function DashboardPage() {
     [month, categoryFilter, orderedTransactions]
   );
 
+  const recentTransactions = useMemo(
+    () => visibleTransactions.slice(0, 5),
+    [visibleTransactions]
+  );
+
   return (
     <main className="page">
       <section className="panel">
@@ -456,30 +463,6 @@ export default function DashboardPage() {
 
       <section className="grid grid-2">
         <article className="panel">
-          <h2>Expense Breakdown</h2>
-          <div className="breakdown-list" aria-label="Expense breakdown by category">
-            {expenseBreakdown.length ? (
-              expenseBreakdown.map((entry) => (
-                <div key={`expense-${entry.name}`} className="breakdown-item">
-                  <div className="breakdown-labels">
-                    <span>{entry.name}</span>
-                    <strong>{formatCurrency(entry.amount)}</strong>
-                  </div>
-                  <div className="breakdown-bar-shell">
-                    <div
-                      className="breakdown-bar expense"
-                      style={{ width: `${(entry.amount / maxBreakdownAmount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="muted">No expense categories for the current filter.</p>
-            )}
-          </div>
-        </article>
-
-        <article className="panel">
           <h2>Income Breakdown</h2>
           <div className="breakdown-list" aria-label="Income breakdown by category">
             {incomeBreakdown.length ? (
@@ -502,6 +485,30 @@ export default function DashboardPage() {
             )}
           </div>
         </article>
+
+        <article className="panel">
+          <h2>Expense Breakdown</h2>
+          <div className="breakdown-list" aria-label="Expense breakdown by category">
+            {expenseBreakdown.length ? (
+              expenseBreakdown.map((entry) => (
+                <div key={`expense-${entry.name}`} className="breakdown-item">
+                  <div className="breakdown-labels">
+                    <span>{entry.name}</span>
+                    <strong>{formatCurrency(entry.amount)}</strong>
+                  </div>
+                  <div className="breakdown-bar-shell">
+                    <div
+                      className="breakdown-bar expense"
+                      style={{ width: `${(entry.amount / maxBreakdownAmount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="muted">No expense categories for the current filter.</p>
+            )}
+          </div>
+        </article>
       </section>
 
       <section className="panel">
@@ -519,7 +526,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleTransactions.map((item) => {
+              {recentTransactions.map((item) => {
                 const isEditing = editingId === item.id;
 
                 return (
@@ -667,7 +674,7 @@ export default function DashboardPage() {
                   </tr>
                 );
               })}
-              {!visibleTransactions.length ? (
+              {!recentTransactions.length ? (
                 <tr>
                   <td colSpan={6}>No transactions for selected month or category.</td>
                 </tr>
