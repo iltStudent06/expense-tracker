@@ -32,24 +32,22 @@ Completed in the current branch. The app now includes a protected `/transactions
 
 ## Confirmed repo gaps
 
----
+### ✅ CAP-002 — Enforce role-based access control — COMPLETE
+**Status**
+Completed in the current branch and intentionally left in this section per request, marked complete in place.
 
-### CAP-002 — Enforce role-based access control
-**Description**
-The backend stores a `role` on `User` and includes it in the JWT, but the API currently appears to enforce authentication only, not role-based authorization.
+**Implementation evidence**
+- Reusable auth and role middleware implemented in [api/src/middleware/auth.ts](api/src/middleware/auth.ts).
+- Ownership-aware and admin-aware access rules implemented in [api/src/routes/categories.ts](api/src/routes/categories.ts) and [api/src/routes/transactions.ts](api/src/routes/transactions.ts).
+- API test coverage added in [api/test/api.test.js](api/test/api.test.js).
+- RBAC behavior documented in [README.md](README.md).
 
-**Evidence**
-- `User` includes `role` values of `user` and `admin`.
-- JWT payload includes `role`.
-- No route-level role guard is visible in the current auth flow.
-- See [src/models/User.ts](src/models/User.ts), [src/middleware/auth.ts](src/middleware/auth.ts), and [src/routes/auth.ts](src/routes/auth.ts).
-
-**Acceptance criteria**
+**Acceptance criteria met**
 - Introduce reusable role-check middleware.
-- Protect at least one meaningful action with admin-only or role-restricted access.
-- Return `403` for authenticated users without the required role.
-- Add API tests that cover allowed and denied role scenarios.
-- Document which routes/actions are role-restricted.
+- Protect meaningful actions with role-restricted or admin-aware access.
+- Return `403` for authenticated users without required access.
+- Add API tests for allowed and denied scenarios.
+- Document role-restricted behavior and route expectations.
 
 ---
 
@@ -90,16 +88,18 @@ CI builds the frontend image, but the only deployment workflow in the repo targe
 
 ---
 
-### CAP-005 — Align the frontend auth client with the written rubric
-**Description**
-Authentication works with a custom `fetch` wrapper, but the capstone instructions explicitly call for Axios interceptors.
+### ✅ CAP-005 — Align the frontend auth client with the written rubric
+**Status**
+Completed in the current branch. The frontend now uses a shared Axios client with automatic JWT attachment and centralized auth-error handling.
 
-**Evidence**
-- Frontend requests are made through a custom `request()` helper using `fetch`.
-- No Axios dependency is present in the frontend package.
-- See [frontend/src/App.tsx](frontend/src/App.tsx) and [frontend/package.json](frontend/package.json).
+**Implementation evidence**
+- Shared Axios client added in [frontend/src/lib/api.ts](frontend/src/lib/api.ts).
+- Request interceptor attaches the bearer token automatically.
+- Response interceptor clears expired/unauthorized sessions consistently.
+- Frontend auth and CRUD tests updated and validated in [frontend/src/App.test.tsx](frontend/src/App.test.tsx).
+- Dependency added in [frontend/package.json](frontend/package.json).
 
-**Acceptance criteria**
+**Acceptance criteria met**
 - Add a shared Axios client.
 - Attach the JWT automatically with a request interceptor.
 - Handle auth failures consistently in one place.
@@ -107,7 +107,7 @@ Authentication works with a custom `fetch` wrapper, but the capstone instruction
 - Confirm existing auth and CRUD flows still work.
 
 **Priority note**
-This is a **rubric-alignment** ticket. If the instructor is grading by behavior rather than library choice, it may be optional; if they are grading literally against the written spec, it should be completed.
+This is a rubric-alignment ticket and is now complete in the current branch.
 
 ---
 

@@ -241,7 +241,7 @@ export default function TransactionsPage() {
           </label>
 
           <label>
-            Linked Category
+            Existing Category
             <select
               value={form.categoryId}
               onChange={(event) => {
@@ -340,7 +340,7 @@ export default function TransactionsPage() {
                           <option value="income">Income</option>
                         </select>
                       ) : (
-                        item.type
+                        <span className={`status-badge ${item.type}`}>{item.type}</span>
                       )}
                     </td>
                     <td>
@@ -366,7 +366,7 @@ export default function TransactionsPage() {
                               }));
                             }}
                           >
-                            <option value="">No linked category</option>
+                            <option value="">No existing category</option>
                             {categories.map((categoryOption) => (
                               <option key={categoryOption.id} value={categoryOption.id}>
                                 {categoryOption.name}
@@ -419,7 +419,9 @@ export default function TransactionsPage() {
                           </>
                         ) : (
                           <>
-                            <Link to={`/transactions/${item.id}`}>View</Link>
+                            <Link to={`/transactions/${item.id}`} className="action-link-button">
+                              View
+                            </Link>
                             <button type="button" onClick={() => startEditing(item)}>
                               Edit
                             </button>

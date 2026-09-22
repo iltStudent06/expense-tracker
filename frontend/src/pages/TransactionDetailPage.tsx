@@ -74,7 +74,9 @@ export default function TransactionDetailPage() {
         <section className="grid grid-2">
           <article className="panel">
             <h2>Record Details</h2>
-            <p><strong>Type:</strong> {transaction.type}</p>
+            <p>
+              <strong>Type:</strong> <span className={`status-badge ${transaction.type}`}>{transaction.type}</span>
+            </p>
             <p><strong>Amount:</strong> {formatCurrency(transaction.amount)}</p>
             <p><strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()}</p>
             <p><strong>Description:</strong> {transaction.description || "—"}</p>
@@ -85,6 +87,12 @@ export default function TransactionDetailPage() {
             <p><strong>Name:</strong> {transaction.categoryDetails?.name ?? transaction.category}</p>
             <p><strong>Color:</strong> {transaction.categoryDetails?.color ?? "—"}</p>
             <p><strong>Description:</strong> {transaction.categoryDetails?.description ?? "—"}</p>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span className={`status-badge ${transaction.categoryId ? "linked" : "unlinked"}`}>
+                {transaction.categoryId ? "Linked" : "Unlinked"}
+              </span>
+            </p>
             <p><strong>Linked Category ID:</strong> {transaction.categoryId ?? "—"}</p>
           </article>
         </section>

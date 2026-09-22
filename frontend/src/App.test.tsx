@@ -1,9 +1,28 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import App from "./App";
 
 const AUTH_STORAGE_KEY = "expense-dashboard-auth";
+
+const { axiosInstance } = vi.hoisted(() => {
+  const axiosInstance = {
+    interceptors: {
+      request: { use: vi.fn() },
+      response: { use: vi.fn() }
+    },
+    request: vi.fn()
+  };
+
+  return { axiosInstance };
+});
+
+vi.mock("axios", () => ({
+  default: {
+    create: vi.fn(() => axiosInstance),
+    isAxiosError: (error: unknown) => Boolean((error as { isAxiosError?: boolean })?.isAxiosError)
+  }
+}));
 
 function renderApp(initialEntries: string[] = ["/"]) {
   return render(
@@ -17,21 +36,25 @@ function createJsonResponse<T>(body: T, ok = true, status = 200) {
   return {
     ok,
     status,
+    data: body,
     json: async () => body
-  } as Response;
+  } as unknown as Response;
 }
 
 describe("App", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    globalThis.fetch = vi.fn() as unknown as typeof fetch;
+    vi.clearAllMocks();
+    axiosInstance.request.mockReset();
+    localStorage.clear();
   });
 
   test("redirects unauthenticated users from dashboard to login", async () => {
     renderApp(["/"]);
 
     expect(await screen.findByRole("heading", { name: "Login" })).toBeInTheDocument();
-    expect(screen.getByText(/Sign in to manage expense transactions and budgets/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Sign in with your email and password to manage expense transactions and budgets/i)
+    ).toBeInTheDocument();
   });
 
   test("renders dashboard data for an authenticated user", async () => {
@@ -43,73 +66,66 @@ describe("App", () => {
       })
     );
 
-    const fetchMock = vi.mocked(globalThis.fetch);
-    fetchMock.mockImplementation((path: string | URL | Request, options: RequestInit = {}) => {
-      if (typeof path === "string" && path.startsWith("/api/transactions?month=")) {
-        return Promise.resolve(
-          createJsonResponse([
+    axiosInstance.request.mockImplementation((config) => {
+      const route = config.url;
+
+      if (route === "/api/transactions") {
+        return Promise.resolve({
+          data: [
             {
               id: "tx-1",
               type: "expense",
               amount: 45.25,
               category: "Groceries",
               categoryId: "cat-1",
+              ownerUserId: "user-1",
               description: "Weekly shopping",
               date: "2026-09-18T00:00:00.000Z"
             }
-          ])
-        );
+          ],
+          status: 200
+        });
       }
 
-      if (path === "/api/summary?month=2026-09") {
-        return Promise.resolve(
-          createJsonResponse({
-            totals: { income: 2500, expenses: 45.25, balance: 2454.75 }
-          })
-        );
+      if (route === "/api/summary?month=2026-09") {
+        return Promise.resolve({
+          data: { totals: { income: 2500, expenses: 45.25, balance: 2454.75 } },
+          status: 200
+        });
       }
 
-      if (path === "/api/trends?months=6") {
-        return Promise.resolve(
-          createJsonResponse({
-            trends: [{ month: "2026-09", income: 2500, expenses: 45.25, balance: 2454.75 }]
-          })
-        );
+      if (route === "/api/trends?months=6") {
+        return Promise.resolve({
+          data: { trends: [{ month: "2026-09", income: 2500, expenses: 45.25, balance: 2454.75 }] },
+          status: 200
+        });
       }
 
-      if (path === "/api/dashboard") {
-        return Promise.resolve(
-          createJsonResponse({
-            totals: { transactions: 1, users: 1, categories: 2 },
-            recentTransactions: []
-          })
-        );
+      if (route === "/api/dashboard") {
+        return Promise.resolve({
+          data: { totals: { transactions: 1, users: 1, categories: 2 }, recentTransactions: [] },
+          status: 200
+        });
       }
 
-      if (path === "/api/categories") {
-        const headers = new Headers(options.headers);
-        expect(headers.get("Authorization")).toBe("Bearer test-token");
-        return Promise.resolve(
-          createJsonResponse([
+      if (route === "/api/categories") {
+        expect(config.headers.Authorization).toBe("Bearer test-token");
+        return Promise.resolve({
+          data: [
             {
               id: "cat-1",
               name: "Groceries",
               color: "#10b981",
               description: "Food",
+              ownerUserId: "user-1",
               updatedAt: "2026-09-18T00:00:00.000Z"
-            },
-            {
-              id: "cat-2",
-              name: "Utilities",
-              color: "#2563eb",
-              description: "Bills",
-              updatedAt: "2026-09-19T00:00:00.000Z"
             }
-          ])
-        );
+          ],
+          status: 200
+        });
       }
 
-      return Promise.reject(new Error(`Unhandled fetch path: ${String(path)}`));
+      return Promise.reject(new Error(`Unhandled axios path: ${String(route)}`));
     });
 
     renderApp(["/"]);
@@ -118,9 +134,17 @@ describe("App", () => {
       await screen.findByRole("heading", { name: /Expense Tracker \/ Budget Dashboard/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
-    expect(screen.getByText("Total Categories")).toBeInTheDocument();
-    expect(await screen.findByText("2")).toBeInTheDocument();
+    const transactionsCard = screen.getByText("Total Transactions").closest("article");
+    const categoriesCard = screen.getByText("Total Categories").closest("article");
+
+    expect(transactionsCard).not.toBeNull();
+    expect(categoriesCard).not.toBeNull();
+
     expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(transactionsCard as HTMLElement).getByText("1")).toBeInTheDocument();
+      expect(within(categoriesCard as HTMLElement).getByText("1")).toBeInTheDocument();
+    });
     expect((await screen.findAllByText("$2,454.75")).length).toBeGreaterThan(0);
   });
 
@@ -133,9 +157,9 @@ describe("App", () => {
       })
     );
 
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(
-        createJsonResponse([
+    axiosInstance.request
+      .mockResolvedValueOnce({
+        data: [
           {
             id: "cat-1",
             name: "Groceries",
@@ -143,19 +167,21 @@ describe("App", () => {
             description: "Food",
             updatedAt: "2026-09-18T00:00:00.000Z"
           }
-        ])
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
+        ],
+        status: 200
+      })
+      .mockResolvedValueOnce({
+        data: {
           id: "cat-2",
           name: "Travel",
           color: "#f97316",
           description: "Trips",
           updatedAt: "2026-09-20T00:00:00.000Z"
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse([
+        },
+        status: 201
+      })
+      .mockResolvedValueOnce({
+        data: [
           {
             id: "cat-1",
             name: "Groceries",
@@ -170,17 +196,13 @@ describe("App", () => {
             description: "Trips",
             updatedAt: "2026-09-20T00:00:00.000Z"
           }
-        ])
-      );
-
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+        ],
+        status: 200
+      });
 
     renderApp(["/categories"]);
 
-    expect(
-      await screen.findByRole("heading", { name: "Manage Categories" })
-    ).toBeInTheDocument();
-
+    expect(await screen.findByRole("heading", { name: "Manage Categories" })).toBeInTheDocument();
     expect(await screen.findByText("Groceries")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Travel" } });
@@ -189,14 +211,14 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save Category" }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(axiosInstance.request).toHaveBeenCalledTimes(3);
     });
 
-    const postCall = fetchMock.mock.calls[1] as [string, RequestInit];
-    expect(postCall[0]).toBe("/api/categories");
-    expect(postCall[1].method).toBe("POST");
-    expect(new Headers(postCall[1].headers).get("Authorization")).toBe("Bearer test-token");
-    expect(JSON.parse(String(postCall[1].body))).toEqual({
+    const postCall = axiosInstance.request.mock.calls[1][0];
+    expect(postCall.url).toBe("/api/categories");
+    expect(postCall.method).toBe("POST");
+    expect(postCall.headers.Authorization).toBe("Bearer test-token");
+    expect(JSON.parse(String(postCall.data))).toEqual({
       name: "Travel",
       color: "#f97316",
       description: "Trips"
@@ -253,38 +275,33 @@ describe("App", () => {
       date: "2026-09-20T00:00:00.000Z"
     };
 
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(createJsonResponse(initialTransactions))
-      .mockResolvedValueOnce(createJsonResponse(categories))
-      .mockResolvedValueOnce(createJsonResponse(createdTransaction))
-      .mockResolvedValueOnce(createJsonResponse([...initialTransactions, createdTransaction]))
-      .mockResolvedValueOnce(createJsonResponse(categories));
-
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    axiosInstance.request
+      .mockResolvedValueOnce({ data: initialTransactions, status: 200 })
+      .mockResolvedValueOnce({ data: categories, status: 200 })
+      .mockResolvedValueOnce({ data: createdTransaction, status: 201 })
+      .mockResolvedValueOnce({ data: [...initialTransactions, createdTransaction], status: 200 })
+      .mockResolvedValueOnce({ data: categories, status: 200 });
 
     renderApp(["/transactions"]);
 
-    expect(
-      await screen.findByRole("heading", { name: "Manage Transactions" })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Manage Transactions" })).toBeInTheDocument();
     expect(await screen.findByText("Weekly shopping")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Type"), { target: { value: "income" } });
     fireEvent.change(screen.getByLabelText("Amount"), { target: { value: "1200" } });
     fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Salary" } });
-    fireEvent.change(screen.getByLabelText("Linked Category"), { target: { value: "cat-2" } });
+    fireEvent.change(screen.getByLabelText("Existing Category"), { target: { value: "cat-2" } });
     fireEvent.change(screen.getByLabelText("Description"), { target: { value: "Payday" } });
     fireEvent.click(screen.getByRole("button", { name: "Save Transaction" }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(5);
+      expect(axiosInstance.request).toHaveBeenCalledTimes(5);
     });
 
-    const postCall = fetchMock.mock.calls[2] as [string, RequestInit];
-    expect(postCall[0]).toBe("/api/transactions");
-    expect(postCall[1].method).toBe("POST");
-    expect(JSON.parse(String(postCall[1].body))).toMatchObject({
+    const postCall = axiosInstance.request.mock.calls[2][0];
+    expect(postCall.url).toBe("/api/transactions");
+    expect(postCall.method).toBe("POST");
+    expect(JSON.parse(String(postCall.data))).toMatchObject({
       type: "income",
       amount: 1200,
       category: "Salary",

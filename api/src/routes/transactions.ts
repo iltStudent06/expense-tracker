@@ -9,14 +9,13 @@ import { buildTransactionQuery, normalizeTransaction, toPublicCategory, toPublic
 
 const router = Router();
 
-async function ensureOwnedCategory(categoryId: mongoose.Types.ObjectId | undefined, ownerUserId: string) {
+async function ensureExistingCategory(categoryId: mongoose.Types.ObjectId | undefined) {
   if (!categoryId) {
     return null;
   }
 
   const category = await CategoryModel.findOne({
-    _id: categoryId,
-    ownerUserId
+    _id: categoryId
   }).lean();
 
   return category;
@@ -57,9 +56,9 @@ router.post(
     }
 
     if (normalized.value.categoryId) {
-      const category = await ensureOwnedCategory(normalized.value.categoryId, ownerUserId);
+      const category = await ensureExistingCategory(normalized.value.categoryId);
       if (!category) {
-        return res.status(400).json({ error: "linked category not found for authenticated user" });
+        return res.status(400).json({ error: "linked category not found" });
       }
     }
 
@@ -81,12 +80,14 @@ router.get(
       return res.status(401).json({ error: "authorization token required" });
     }
 
+    const isAdmin = req.user?.role === "admin";
+
     const documents = await TransactionModel.find(
       buildTransactionQuery({
         type: req.query.type,
         category: req.query.category,
         month: req.query.month,
-        ownerUserId
+        ownerUserId: isAdmin ? null : ownerUserId
       })
     )
       .sort({ date: -1 })
@@ -110,12 +111,15 @@ router.get(
       return res.status(400).json({ error: parsed.error });
     }
 
-    const document = await TransactionModel.findOne({
-      _id: parsed.value,
-      ownerUserId
-    }).lean();
+    const isAdmin = req.user?.role === "admin";
+
+    const document = await TransactionModel.findById(parsed.value).lean();
     if (!document) {
       return res.status(404).json({ error: "transaction not found" });
+    }
+
+    if (!isAdmin && document.ownerUserId.toString() !== ownerUserId) {
+      return res.status(403).json({ error: "you do not have permission to view this transaction" });
     }
 
     return res.status(200).json(await populateTransactionCategory(document));
@@ -151,9 +155,9 @@ router.put(
     }
 
     if (normalized.value.categoryId) {
-      const category = await ensureOwnedCategory(normalized.value.categoryId, ownerUserId);
+      const category = await ensureExistingCategory(normalized.value.categoryId);
       if (!category) {
-        return res.status(400).json({ error: "linked category not found for authenticated user" });
+        return res.status(400).json({ error: "linked category not found" });
       }
     }
 

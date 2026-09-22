@@ -1,6 +1,41 @@
-import { loadAuthSession } from "./auth";
+import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
+import { loadAuthSession, saveAuthSession } from "./auth";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
+
+const apiClient = axios.create({
+  baseURL: API_BASE || undefined,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const session = loadAuthSession();
+
+  if (session?.token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${session.token}`;
+  }
+
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    const status = error.response?.status;
+
+    if (status === 401 || status === 403) {
+      const session = loadAuthSession();
+      if (session) {
+        saveAuthSession(null);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 interface ApiErrorPayload {
   error?: string;
@@ -114,23 +149,44 @@ function getFriendlyErrorMessageByStatus(status: number, context: RequestContext
 }
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const session = loadAuthSession();
   const context = getRequestContext(path);
-  const headers = new Headers(options.headers ?? {});
-  headers.set("Content-Type", "application/json");
+  const { body, headers, method } = options as RequestInit & { body?: BodyInit | null };
+
+  const requestHeaders =
+    Array.isArray(headers)
+      ? Object.fromEntries(headers)
+      : headers instanceof Headers
+        ? Object.fromEntries(headers.entries())
+        : ((headers as Record<string, string> | undefined) ?? {});
+
+  const session = loadAuthSession();
 
   if (session?.token) {
-    headers.set("Authorization", `Bearer ${session.token}`);
+    requestHeaders.Authorization = `Bearer ${session.token}`;
   }
 
-  let response: Response;
-
   try {
-    response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers,
+    const response = await apiClient.request<T>({
+      method,
+      url: path,
+      data: body,
+      headers: requestHeaders,
     });
-  } catch {
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 0;
+      let message = getFriendlyErrorMessageByStatus(status, context);
+
+      const data = error.response?.data as ApiErrorPayload | undefined;
+      if (data && (data.error || data.message)) {
+        message = data.error ?? data.message ?? message;
+      }
+
+      throw new Error(message);
+    }
+
     if (context === "dashboard" || context === "summary" || context === "trends") {
       throw new Error("Unable to load your dashboard right now. Please check your connection and try again.");
     }
@@ -149,26 +205,8 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 
     throw new Error("Unable to connect right now. Please check your internet connection and try again.");
   }
-
-  if (!response.ok) {
-    let message = getFriendlyErrorMessageByStatus(response.status, context);
-
-    try {
-      const data = (await response.json()) as ApiErrorPayload;
-      if (data?.error || data?.message) {
-        message = data.error ?? data.message ?? message;
-      }
-    } catch {
-      // ignore malformed JSON
-    }
-
-    throw new Error(message);
-  }
-
-  return (await response.json()) as T;
 }
 
 export function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong. Please try again.";
 }
-
