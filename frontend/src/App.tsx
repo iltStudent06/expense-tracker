@@ -80,7 +80,7 @@ function AppShell() {
   const { isAuthenticated, signOut } = useAuth();
 
   return (
-    <>
+    <div className="app-shell">
       <header className="topbar">
         <div className="page topbar-inner">
           <Link to="/" className="brand-link" aria-label="Expense Tracker dashboard">
@@ -111,13 +111,13 @@ function AppShell() {
               <>
                 <NavLink
                   to="/login"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
+                  className={({ isActive }) => (isActive ? "active auth-current" : undefined)}
                 >
                   Login
                 </NavLink>
                 <NavLink
                   to="/register"
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
+                  className={({ isActive }) => (isActive ? "active auth-current" : undefined)}
                 >
                   Register
                 </NavLink>
@@ -132,8 +132,16 @@ function AppShell() {
         </div>
       </header>
 
-      <Outlet />
-    </>
+      <main className="app-main">
+        <Outlet />
+      </main>
+
+      <footer className="app-footer">
+        <div className="page">
+          <p>© 2026 Expense Tracker. Built for clear, modern financial management.</p>
+        </div>
+      </footer>
+    </div>
   );
 }
 function ProtectedRoute({ children }: { children: ReactNode }) {

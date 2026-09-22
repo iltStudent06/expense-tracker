@@ -12,6 +12,33 @@ body {
   margin: 0;
 }
 
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+}
+
+.app-footer {
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.94rem;
+}
+
+.app-footer p {
+  margin: 0;
+  padding: 1.15rem 0 2rem;
+  text-align: center;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -54,14 +81,24 @@ body {
 }
 
 .topnav a {
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
   color: #374151;
   font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 
 .topnav a.active,
 .topnav a:hover {
   color: #111827;
+}
+
+.topnav a.auth-current,
+.topnav a.auth-current:hover {
+  color: #ffffff;
+  background: #1d4ed8;
 }
 
 .topnav-button {
@@ -160,6 +197,10 @@ body {
 .section-copy {
   margin-top: 0;
   color: #6b7280;
+}
+
+.login-subtitle {
+  white-space: nowrap;
 }
 
 .page {
@@ -434,6 +475,10 @@ td select {
 }
 
 @media (max-width: 768px) {
+  .login-subtitle {
+    white-space: normal;
+  }
+
   .form,
   .grid,
   .filter-grid,
