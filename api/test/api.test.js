@@ -132,7 +132,9 @@ describe("Expense Dashboard API", () => {
     assert.equal(updateResponse.body.amount, 50);
     assert.equal(updateResponse.body.description, "Weekly shopping and snacks");
 
-    const getResponse = await request(app).get(`/api/transactions/${transactionId}`);
+    const getResponse = await request(app)
+      .get(`/api/transactions/${transactionId}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     assert.equal(getResponse.status, 200);
     assert.equal(getResponse.body.categoryDetails?.id, categoryId);
