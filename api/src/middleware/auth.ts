@@ -41,3 +41,17 @@ export function attachOptionalAuth(req: Request, _res: Response, next: NextFunct
 export function getAuthUserId(req: Request) {
   return req.user?.userId ?? null;
 }
+
+export function requireRole(role: "user" | "admin") {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "authorization token required" });
+    }
+
+    if (req.user.role !== role) {
+      return res.status(403).json({ error: `${role} role required` });
+    }
+
+    next();
+  };
+}

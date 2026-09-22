@@ -7,6 +7,7 @@ let mongod;
 let app;
 let closeDatabaseConnection;
 let authToken;
+let adminToken;
 let categoryId;
 let transactionId;
 
@@ -142,7 +143,9 @@ describe("Expense Dashboard API", () => {
   });
 
   test("returns dashboard totals and category collection data", async () => {
-    const categoriesResponse = await request(app).get("/api/categories");
+    const categoriesResponse = await request(app)
+      .get("/api/categories")
+      .set("Authorization", `Bearer ${authToken}`);
     assert.equal(categoriesResponse.status, 200);
     assert.equal(categoriesResponse.body.length, 1);
     assert.equal(categoriesResponse.body[0].id, categoryId);
@@ -153,6 +156,140 @@ describe("Expense Dashboard API", () => {
     assert.equal(dashboardResponse.body.totals.categories, 1);
     assert.equal(dashboardResponse.body.totals.transactions, 1);
     assert.equal(dashboardResponse.body.recentTransactions[0].id, transactionId);
+  });
+
+  test("enforces role-based access control on category deletion", async () => {
+    // Create an admin user
+    const adminRegisterResponse = await request(app).post("/api/auth/register").send({
+      name: "Admin User",
+      email: "admin@example.com",
+      password: "secret123",
+      role: "admin"
+    });
+
+    assert.equal(adminRegisterResponse.status, 201);
+    adminToken = adminRegisterResponse.body.token;
+
+    // Create a category as admin
+    const adminCategoryResponse = await request(app)
+      .post("/api/categories")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Admin Category",
+        color: "#ef4444",
+        description: "Category owned by admin"
+      });
+
+    assert.equal(adminCategoryResponse.status, 201);
+    const adminCategoryId = adminCategoryResponse.body.id;
+
+    // Create a category as regular user
+    const userCategoryResponse = await request(app)
+      .post("/api/categories")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({
+        name: "User Category",
+        color: "#3b82f6",
+        description: "Category owned by regular user"
+      });
+
+    assert.equal(userCategoryResponse.status, 201);
+    const userCategoryId = userCategoryResponse.body.id;
+
+    // Regular user should NOT be able to delete admin's category (403)
+    const unauthorizedDeleteResponse = await request(app)
+      .delete(`/api/categories/${adminCategoryId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+
+    assert.equal(unauthorizedDeleteResponse.status, 403);
+    assert.equal(unauthorizedDeleteResponse.body.error, "admin role required to delete other users' categories");
+
+    // Regular user SHOULD be able to delete their own category
+    const ownDeleteResponse = await request(app)
+      .delete(`/api/categories/${userCategoryId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+
+    assert.equal(ownDeleteResponse.status, 200);
+    assert.equal(ownDeleteResponse.body.id, userCategoryId);
+
+    // Admin should be able to delete any category (even another user's)
+    const adminDeleteResponse = await request(app)
+      .delete(`/api/categories/${adminCategoryId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminDeleteResponse.status, 200);
+    assert.equal(adminDeleteResponse.body.id, adminCategoryId);
+
+    // Verify both are deleted
+    const getAdminCat = await request(app)
+      .get(`/api/categories/${adminCategoryId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    assert.equal(getAdminCat.status, 404);
+
+    const getUserCat = await request(app)
+      .get(`/api/categories/${userCategoryId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+    assert.equal(getUserCat.status, 404);
+  });
+
+  test("enforces visibility permissions on user categories and transactions", async () => {
+    // Create a second user
+    const user2RegisterResponse = await request(app).post("/api/auth/register").send({
+      name: "User 2",
+      email: "user2@example.com",
+      password: "secret123",
+      role: "user"
+    });
+
+    assert.equal(user2RegisterResponse.status, 201);
+    const user2Token = user2RegisterResponse.body.token;
+
+    // User 1 creates a category
+    const user1CategoryResponse = await request(app)
+      .post("/api/categories")
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({
+        name: "User1 Private",
+        color: "#10b981",
+        description: "User 1's category"
+      });
+
+    assert.equal(user1CategoryResponse.status, 201);
+    const user1CategoryId = user1CategoryResponse.body.id;
+
+    // User 2 should NOT be able to view User 1's category
+    const unauthorizedViewResponse = await request(app)
+      .get(`/api/categories/${user1CategoryId}`)
+      .set("Authorization", `Bearer ${user2Token}`);
+
+    assert.equal(unauthorizedViewResponse.status, 403);
+    assert.equal(unauthorizedViewResponse.body.error, "you do not have permission to view this category");
+
+    // User 2's categoryList should not include User 1's category
+    const user2CategoriesResponse = await request(app)
+      .get("/api/categories")
+      .set("Authorization", `Bearer ${user2Token}`);
+
+    assert.equal(user2CategoriesResponse.status, 200);
+    const hasUser1Category = user2CategoriesResponse.body.some(c => c.id === user1CategoryId);
+    assert.equal(hasUser1Category, false, "User 2 should not see User 1's category");
+
+    // Admin SHOULD be able to view User 1's category
+    const adminViewResponse = await request(app)
+      .get(`/api/categories/${user1CategoryId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminViewResponse.status, 200);
+    assert.equal(adminViewResponse.body.id, user1CategoryId);
+
+    // Admin's categoryList SHOULD include all categories from all users
+    const adminCategoriesResponse = await request(app)
+      .get("/api/categories")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    assert.equal(adminCategoriesResponse.status, 200);
+    const adminHasUser1Category = adminCategoriesResponse.body.some(c => c.id === user1CategoryId);
+    assert.equal(adminHasUser1Category, true, "Admin should see all categories from all users");
   });
 
   test("logs in and deletes seeded test records", async () => {

@@ -125,12 +125,12 @@ Notes:
 - `GET /api/categories/:id`
 - `POST /api/categories` (auth required)
 - `PUT /api/categories/:id` (auth required)
-- `DELETE /api/categories/:id` (auth required)
+- `DELETE /api/categories/:id` (admin required or owner)
 - `GET /api/transactions`
 - `GET /api/transactions/:id`
 - `POST /api/transactions` (auth required)
 - `PUT /api/transactions/:id` (auth required)
-- `DELETE /api/transactions/:id` (auth required)
+- `DELETE /api/transactions/:id` (auth required, owner only)
 - `GET /api/summary`
 - `GET /api/trends`
 - `GET /api/dashboard`
@@ -145,6 +145,35 @@ Authorization: Bearer <token>
 ```
 
 - If `JWT_SECRET` is not set, API falls back to a development default secret. Set a strong value for non-dev environments.
+
+## Role-based access control
+
+The application enforces role-based authorization on protected routes:
+
+### User roles
+
+- `user` — Regular user. Can create, read, update, and delete their own resources only.
+- `admin` — Administrator. Can read and delete any user's resources in addition to their own.
+
+### Protected operations
+
+**Category operations:**
+- **Read (GET /api/categories, GET /api/categories/:id)** — Requires authentication. Users see only their own categories; admins see all categories.
+- **Create (POST /api/categories)** — Requires authentication. Any user can create categories.
+- **Update (PUT /api/categories/:id)** — Requires authentication and ownership. Users can only update their own.
+- **Delete (DELETE /api/categories/:id)** — Requires either:
+  - Owner (user who created the category), OR
+  - Admin role
+
+  Non-owners receive `403 Forbidden` with error: `"admin role required to delete other users' categories"`
+
+**Transaction operations:**
+- **Read (GET /api/transactions, GET /api/transactions/:id)** — Requires authentication. Users see only their own transactions; admins see all transactions.
+- **Create/Update/Delete** — Requires authentication and ownership. Users can only modify their own transactions; admins cannot bypass ownership.
+
+### Role assignment
+
+Users can register with a role, defaulting to `user`. Admin users must be created or promoted outside the normal registration flow (e.g., direct database seeding or admin operations).
 
 ## Testing and type checking
 
