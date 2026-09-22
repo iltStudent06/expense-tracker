@@ -232,7 +232,7 @@ describe("Expense Dashboard API", () => {
     assert.equal(getUserCat.status, 404);
   });
 
-  test("enforces visibility permissions on user categories and transactions", async () => {
+  test("allows authenticated users to view shared categories", async () => {
     // Create a second user
     const user2RegisterResponse = await request(app).post("/api/auth/register").send({
       name: "User 2",
@@ -257,24 +257,24 @@ describe("Expense Dashboard API", () => {
     assert.equal(user1CategoryResponse.status, 201);
     const user1CategoryId = user1CategoryResponse.body.id;
 
-    // User 2 should NOT be able to view User 1's category
+    // User 2 can view shared categories
     const unauthorizedViewResponse = await request(app)
       .get(`/api/categories/${user1CategoryId}`)
       .set("Authorization", `Bearer ${user2Token}`);
 
-    assert.equal(unauthorizedViewResponse.status, 403);
-    assert.equal(unauthorizedViewResponse.body.error, "you do not have permission to view this category");
+    assert.equal(unauthorizedViewResponse.status, 200);
+    assert.equal(unauthorizedViewResponse.body.id, user1CategoryId);
 
-    // User 2's categoryList should not include User 1's category
+    // User 2's category list should include User 1's category as a shared category
     const user2CategoriesResponse = await request(app)
       .get("/api/categories")
       .set("Authorization", `Bearer ${user2Token}`);
 
     assert.equal(user2CategoriesResponse.status, 200);
     const hasUser1Category = user2CategoriesResponse.body.some(c => c.id === user1CategoryId);
-    assert.equal(hasUser1Category, false, "User 2 should not see User 1's category");
+    assert.equal(hasUser1Category, true, "User 2 should see shared categories");
 
-    // Admin SHOULD be able to view User 1's category
+    // Admin SHOULD also be able to view User 1's category
     const adminViewResponse = await request(app)
       .get(`/api/categories/${user1CategoryId}`)
       .set("Authorization", `Bearer ${adminToken}`);
@@ -282,7 +282,7 @@ describe("Expense Dashboard API", () => {
     assert.equal(adminViewResponse.status, 200);
     assert.equal(adminViewResponse.body.id, user1CategoryId);
 
-    // Admin's categoryList SHOULD include all categories from all users
+    // Admin's category list SHOULD include all categories from all users
     const adminCategoriesResponse = await request(app)
       .get("/api/categories")
       .set("Authorization", `Bearer ${adminToken}`);

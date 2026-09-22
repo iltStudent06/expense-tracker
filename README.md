@@ -158,7 +158,7 @@ The application enforces role-based authorization on protected routes:
 ### Protected operations
 
 **Category operations:**
-- **Read (GET /api/categories, GET /api/categories/:id)** — Requires authentication. Users see only their own categories; admins see all categories.
+- **Read (GET /api/categories, GET /api/categories/:id)** — Requires authentication. Any authenticated user can view the shared category library.
 - **Create (POST /api/categories)** — Requires authentication. Any user can create categories.
 - **Update (PUT /api/categories/:id)** — Requires authentication and ownership. Users can only update their own.
 - **Delete (DELETE /api/categories/:id)** — Requires either:
