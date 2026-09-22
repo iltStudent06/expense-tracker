@@ -135,7 +135,11 @@ The repo contains Docker and Kubernetes assets, but the repository alone does no
 
 **Current status note**
 - Backend and frontend deployments have been rolled out successfully in EKS and pod health has been verified.
-- Remaining proof points are the public URL, ingress exposure, and live end-to-end browser validation.
+- The public frontend URL is now verified and reachable.
+- Remaining proof points are the ingress hostname and any final browser demo screenshots or presentation artifacts.
+
+**Status**
+Mostly complete; live public URL verification passed.
 
 **Acceptance criteria**
 - Public URL loads the landing page at `/`.

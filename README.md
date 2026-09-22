@@ -341,3 +341,11 @@ Because that endpoint currently requires JWT authentication, the seed script wil
 
 - `DEPLOYMENT.md` detailed deployment notes
 - `ARCHITECTURE.md` architecture summary
+
+## Live deployment
+
+Public frontend URL:
+
+- http://k8s-expensed-expensef-09c029c6f0-30256075c96c73a9.elb.us-east-1.amazonaws.com
+
+The React app is available under `/app/` on the same hostname.
