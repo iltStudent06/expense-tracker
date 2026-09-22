@@ -171,7 +171,7 @@ docker build -t expense-dashboard-api .
 ### Frontend image
 
 ```bash
-docker build -t expense-dashboard-frontend ./frontend
+docker build -f frontend/Dockerfile -t expense-dashboard-frontend .
 ```
 
 ## Docker Compose (full stack)

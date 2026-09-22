@@ -61,4 +61,4 @@ jobs:
         run: npm run build
 
       - name: Frontend Docker build
-        run: docker build -t expense-dashboard-frontend-ci ./frontend
+        run: docker build -f frontend/Dockerfile -t expense-dashboard-frontend-ci .
