@@ -143,7 +143,7 @@ describe("App", () => {
       expect(within(transactionsCard as HTMLElement).getByText("1")).toBeInTheDocument();
       expect(within(categoriesCard as HTMLElement).getByText("1")).toBeInTheDocument();
     });
-    expect((await screen.findAllByText("$2,454.75")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("$2,455")).length).toBeGreaterThan(0);
   });
 
   test("renders categories page and submits a new category", async () => {

@@ -14,8 +14,15 @@ interface Transaction {
   amount: number;
   category: string;
   categoryId: string | null;
+  ownerUserId?: string | null;
   description: string;
   date: string;
+  createdAt?: string | null;
+  enteredBy?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
   categoryDetails?: CategoryDetails | null;
 }
 
@@ -91,6 +98,19 @@ export default function TransactionDetailPage() {
             </p>
             <p><strong>Amount:</strong> {formatCurrency(transaction.amount)}</p>
             <p><strong>Date:</strong> {new Date(transaction.date).toLocaleDateString()}</p>
+            <p><strong>Entered By:</strong> {transaction.enteredBy?.name ?? "—"}</p>
+            <p>
+              <strong>Timestamp:</strong>{" "}
+              {transaction.createdAt
+                ? new Date(transaction.createdAt).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit"
+                  })
+                : "—"}
+            </p>
             <p><strong>Description:</strong> {transaction.description || "—"}</p>
           </article>
 
@@ -105,15 +125,7 @@ export default function TransactionDetailPage() {
                 {transaction.categoryDetails?.name ?? transaction.category}
               </span>
             </p>
-            <p><strong>Color:</strong> {transaction.categoryDetails?.color ?? "—"}</p>
             <p><strong>Description:</strong> {transaction.categoryDetails?.description ?? "—"}</p>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span className={`status-badge ${transaction.categoryId ? "linked" : "unlinked"}`}>
-                {transaction.categoryId ? "Linked" : "Unlinked"}
-              </span>
-            </p>
-            <p><strong>Linked Category ID:</strong> {transaction.categoryId ?? "—"}</p>
           </article>
         </section>
       ) : null}
