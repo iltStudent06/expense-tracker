@@ -323,6 +323,24 @@ export default function TransactionsPage() {
     });
   }, [categories, form.type]);
 
+  const editAvailableCategoriesByType = useMemo(() => {
+    const seen = new Set<string>();
+
+    return categories.filter((item) => {
+      if (item.type !== editForm.type) {
+        return false;
+      }
+
+      const key = `${item.type}:${item.name.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [categories, editForm.type]);
+
   const filteredTransactions = useMemo(() => {
     if (!monthFilter) {
       return orderedTransactions;
@@ -538,7 +556,9 @@ export default function TransactionsPage() {
                           onChange={(event) =>
                             setEditForm((prev) => ({
                               ...prev,
-                              type: event.target.value as TransactionType
+                              type: event.target.value as TransactionType,
+                              categoryId: "",
+                              category: ""
                             }))
                           }
                         >
@@ -551,35 +571,26 @@ export default function TransactionsPage() {
                     </td>
                     <td>
                       {isEditing ? (
-                        <div className="cell-stack">
-                          <input
-                            type="text"
-                            value={editForm.category}
-                            onChange={(event) =>
-                              setEditForm((prev) => ({ ...prev, category: event.target.value }))
-                            }
-                          />
-                          <select
-                            value={editForm.categoryId}
-                            onChange={(event) => {
-                              const selectedId = event.target.value;
-                              const selectedCategory = categories.find((entry) => entry.id === selectedId);
+                        <select
+                          value={editForm.categoryId}
+                          onChange={(event) => {
+                            const selectedId = event.target.value;
+                            const selectedCategory = categories.find((entry) => entry.id === selectedId);
 
-                              setEditForm((prev) => ({
-                                ...prev,
-                                categoryId: selectedId,
-                                category: selectedCategory?.name ?? prev.category
-                              }));
-                            }}
-                          >
-                            <option value="">No existing category</option>
-                            {categories.map((categoryOption) => (
-                              <option key={categoryOption.id} value={categoryOption.id}>
-                                {categoryOption.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              categoryId: selectedId,
+                              category: selectedCategory?.name ?? prev.category
+                            }));
+                          }}
+                        >
+                          <option value="">Select category</option>
+                          {editAvailableCategoriesByType.map((categoryOption) => (
+                            <option key={categoryOption.id} value={categoryOption.id}>
+                              {categoryOption.name}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <span
                           className="category-badge"
