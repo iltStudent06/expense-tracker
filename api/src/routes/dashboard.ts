@@ -1,17 +1,19 @@
 import { Router } from "express";
+import { requireAuth, getAuthUserId } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { CategoryModel } from "../models/Category.js";
 import { TransactionModel } from "../models/Transaction.js";
-import { User } from "../models/User.js";
 import { buildTransactionQuery, toMonthKey, toPublicTransaction } from "./helpers.js";
 
 const router = Router();
 
 router.get(
   "/summary",
+  requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
     const documents = await TransactionModel.find(
-      buildTransactionQuery({ month: req.query.month, category: req.query.category })
+      buildTransactionQuery({ month: req.query.month, category: req.query.category, ownerUserId })
     ).lean();
 
     let totalIncome = 0;
@@ -51,7 +53,9 @@ router.get(
 
 router.get(
   "/trends",
+  requireAuth,
   asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
     const monthsParam = Number(req.query.months ?? 6);
     const months = Number.isInteger(monthsParam) && monthsParam > 0 ? monthsParam : 6;
 
@@ -63,7 +67,7 @@ router.get(
       order.push(monthKey);
     }
 
-    const documents = await TransactionModel.find({}).lean();
+    const documents = await TransactionModel.find({ ownerUserId }).lean();
     const trendMap = new Map(
       order.map((key) => [key, { month: key, income: 0, expenses: 0, balance: 0 }])
     );
@@ -99,13 +103,15 @@ router.get(
 
 router.get(
   "/dashboard",
-  asyncHandler(async (_req, res) => {
-    const [transactionCount, userCount, categoryCount, recentDocuments, statusCounts] = await Promise.all([
-      TransactionModel.countDocuments(),
-      User.countDocuments(),
-      CategoryModel.countDocuments(),
-      TransactionModel.find({}).sort({ date: -1 }).limit(5).lean(),
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const ownerUserId = getAuthUserId(req);
+    const [transactionCount, categoryCount, recentDocuments, statusCounts] = await Promise.all([
+      TransactionModel.countDocuments({ ownerUserId }),
+      CategoryModel.countDocuments({ ownerUserId }),
+      TransactionModel.find({ ownerUserId }).sort({ date: -1 }).limit(5).lean(),
       TransactionModel.aggregate([
+        { $match: { ownerUserId } },
         { $group: { _id: "$type", count: { $sum: 1 } } }
       ])
     ]);
@@ -113,7 +119,6 @@ router.get(
     res.status(200).json({
       totals: {
         transactions: transactionCount,
-        users: userCount,
         categories: categoryCount
       },
       groupedCounts: Object.fromEntries(statusCounts.map((entry) => [entry._id, entry.count])),
