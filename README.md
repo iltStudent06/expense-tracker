@@ -259,8 +259,8 @@ docker compose down -v
 
 Default ports:
 
-- Frontend: `8080` (host) → `80` (container)
-- API: `3000` (host) → `3000` (container)
+- Frontend: `3000` (host) → `80` (container)
+- API: `4000` (host) → `4000` (container)
 - MongoDB: `27018` (host) → `27017` (container)
 
 Compose environment overrides:

@@ -9,9 +9,9 @@ services:
       dockerfile: frontend/Dockerfile
     image: expense-dashboard-frontend:latest
     container_name: expense-dashboard-frontend
-    # Expose Nginx port 80 on a configurable host port (default 8080).
+    # Expose Nginx port 80 on a configurable host port (default 3000).
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-3000}:80"
     # Start frontend only after API passes its health check.
     depends_on:
       api:

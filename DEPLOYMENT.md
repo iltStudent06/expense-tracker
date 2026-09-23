@@ -25,18 +25,18 @@ Docker Compose remains the fastest local path. The Kubernetes manifests now cove
 
 ### Docker Compose routes
 
-- Landing page: `http://localhost:9000/`
-- React app: `http://localhost:9000/app/`
-- Login: `http://localhost:9000/app/login`
-- Register: `http://localhost:9000/app/register`
-- Categories: `http://localhost:9000/app/categories`
-- API: `http://localhost:3000`
-- Health: `http://localhost:3000/health`
+- Landing page: `http://localhost:3000/`
+- React app: `http://localhost:3000/app/`
+- Login: `http://localhost:3000/app/login`
+- Register: `http://localhost:3000/app/register`
+- Categories: `http://localhost:3000/app/categories`
+- API: `http://localhost:4000`
+- Health: `http://localhost:4000/health`
 
 ### Default Compose ports
 
-- Frontend host port: `9000` when started with `FRONTEND_PORT=9000`
-- API host port: `3000`
+- Frontend host port: `3000`
+- API host port: `4000`
 - MongoDB host port: `27018`
 
 ## Local deployment with Docker Compose
@@ -44,7 +44,7 @@ Docker Compose remains the fastest local path. The Kubernetes manifests now cove
 From the repository root:
 
 ```bash
-FRONTEND_PORT=9000 docker compose up --build -d
+docker compose up --build -d
 ```
 
 This starts:
@@ -56,7 +56,7 @@ This starts:
 To rebuild only the frontend after UI changes:
 
 ```bash
-FRONTEND_PORT=9000 docker compose up --build -d frontend
+docker compose up --build -d frontend
 ```
 
 To rebuild only the API after backend changes:
@@ -226,7 +226,7 @@ kubectl port-forward service/expense-api 3000:4000
 To test the frontend locally from the cluster without ingress:
 
 ```bash
-kubectl port-forward service/expense-frontend 9000:80
+kubectl port-forward service/expense-frontend 3000:80
 ```
 
 ### Kubernetes limitations right now
