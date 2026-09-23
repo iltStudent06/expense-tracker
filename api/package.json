@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "seed": "node ../scripts/seed-transactions.js",
+    "seed:household": "node ../scripts/seed-shared-household.js",
     "test": "node --import tsx --test test/*.test.js"
   },
   "engines": {
@@ -17,6 +18,8 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.3",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.6.0",
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.13.6",

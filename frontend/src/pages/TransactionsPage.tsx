@@ -57,13 +57,38 @@ function getCategoryBadgeStyle(categoryId: string | null, categoryName: string, 
   };
 }
 
+function getMostRecentTransactionMonth(items: Transaction[]) {
+  let mostRecent: Date | null = null;
+
+  for (const item of items) {
+    const parsed = new Date(item.date);
+    if (Number.isNaN(parsed.getTime())) {
+      continue;
+    }
+
+    if (!mostRecent || parsed.getTime() > mostRecent.getTime()) {
+      mostRecent = parsed;
+    }
+  }
+
+  return mostRecent ? mostRecent.toISOString().slice(0, 7) : "";
+}
+
+function getMonthKey(dateValue: string) {
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 7);
+}
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [monthFilter, setMonthFilter] = useState("");
+  const [newestTransactionId, setNewestTransactionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: TransactionSortKey; direction: SortDirection }>({
     key: "date",
     direction: "desc"
@@ -97,6 +122,8 @@ export default function TransactionsPage() {
 
       setTransactions(txData);
       setCategories(categoryData);
+
+      setMonthFilter((current) => (current ? current : getMostRecentTransactionMonth(txData)));
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
@@ -114,7 +141,7 @@ export default function TransactionsPage() {
     setError("");
 
     try {
-      await request<Transaction>("/api/transactions", {
+      const created = await request<Transaction>("/api/transactions", {
         method: "POST",
         body: JSON.stringify({
           ...form,
@@ -122,6 +149,9 @@ export default function TransactionsPage() {
           amount: Number(form.amount)
         })
       });
+
+      setNewestTransactionId(created.id);
+      setMonthFilter(getMonthKey(created.date));
 
       setForm((prev) => ({
         ...prev,
@@ -139,6 +169,7 @@ export default function TransactionsPage() {
   }
 
   function startEditing(item: Transaction) {
+    setPendingDeleteId(null);
     const matchedCategory =
       categories.find((entry) => entry.id === item.categoryId) ??
       categories.find((entry) => entry.name.toLowerCase() === String(item.category).toLowerCase());
@@ -198,6 +229,8 @@ export default function TransactionsPage() {
         method: "DELETE"
       });
 
+      setPendingDeleteId(null);
+
       if (editingId === itemId) {
         cancelEditing();
       }
@@ -210,10 +243,28 @@ export default function TransactionsPage() {
     }
   }
 
+  function requestDelete(itemId: string) {
+    setPendingDeleteId(itemId);
+  }
+
+  function cancelDelete() {
+    setPendingDeleteId(null);
+  }
+
   const orderedTransactions = useMemo(() => {
     const multiplier = sort.direction === "asc" ? 1 : -1;
 
     return [...transactions].sort((a, b) => {
+      if (newestTransactionId) {
+        if (a.id === newestTransactionId && b.id !== newestTransactionId) {
+          return -1;
+        }
+
+        if (b.id === newestTransactionId && a.id !== newestTransactionId) {
+          return 1;
+        }
+      }
+
       if (sort.key === "date") {
         const delta = (new Date(a.date).getTime() - new Date(b.date).getTime()) * multiplier;
 
@@ -252,12 +303,36 @@ export default function TransactionsPage() {
 
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
-  }, [transactions, sort]);
+  }, [transactions, sort, newestTransactionId]);
 
-  const availableCategoriesByType = useMemo(
-    () => categories.filter((item) => item.type === form.type),
-    [categories, form.type]
-  );
+  const availableCategoriesByType = useMemo(() => {
+    const seen = new Set<string>();
+
+    return categories.filter((item) => {
+      if (item.type !== form.type) {
+        return false;
+      }
+
+      const key = `${item.type}:${item.name.trim().toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [categories, form.type]);
+
+  const filteredTransactions = useMemo(() => {
+    if (!monthFilter) {
+      return orderedTransactions;
+    }
+
+    return orderedTransactions.filter((item) => {
+      const itemMonth = new Date(item.date).toISOString().slice(0, 7);
+      return itemMonth === monthFilter;
+    });
+  }, [orderedTransactions, monthFilter]);
 
   function handleSort(column: TransactionSortKey) {
     setSort((prev) => {
@@ -375,6 +450,16 @@ export default function TransactionsPage() {
 
       <section className="panel">
         <h2>Transaction Library</h2>
+        <div className="filter-grid transaction-library-filters">
+          <label>
+            Filter by month:
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={(event) => setMonthFilter(event.target.value)}
+            />
+          </label>
+        </div>
         <div className="table-wrap">
           <table>
             <thead>
@@ -428,7 +513,7 @@ export default function TransactionsPage() {
               </tr>
             </thead>
             <tbody>
-              {orderedTransactions.map((item) => {
+              {filteredTransactions.map((item) => {
                 const isEditing = editingId === item.id;
 
                 return (
@@ -544,6 +629,20 @@ export default function TransactionsPage() {
                             </button>
                           </>
                         ) : (
+                          pendingDeleteId === item.id ? (
+                            <>
+                              <button
+                                type="button"
+                                className="button-confirm-delete"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Confirm Delete
+                              </button>
+                              <button type="button" onClick={cancelDelete}>
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
                           <>
                             <Link to={`/transactions/${item.id}`} className="action-link-button">
                               View
@@ -551,19 +650,20 @@ export default function TransactionsPage() {
                             <button type="button" onClick={() => startEditing(item)}>
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleDelete(item.id)}>
+                            <button type="button" onClick={() => requestDelete(item.id)}>
                               Delete
                             </button>
                           </>
+                          )
                         )}
                       </div>
                     </td>
                   </tr>
                 );
               })}
-              {!orderedTransactions.length ? (
+              {!filteredTransactions.length ? (
                 <tr>
-                  <td colSpan={6}>No transactions yet.</td>
+                  <td colSpan={6}>No transactions for the selected month.</td>
                 </tr>
               ) : null}
             </tbody>

@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { connectToDatabase, closeDatabaseConnection } from "./config/db.js";
 import { attachOptionalAuth } from "./middleware/auth.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
@@ -9,6 +10,7 @@ import dashboardRoutes from "./routes/dashboard.js";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(attachOptionalAuth);
 app.use(async (_req, _res, next) => {

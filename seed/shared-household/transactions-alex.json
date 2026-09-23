@@ -1,0 +1,170 @@
+[
+  {
+    "type": "income",
+    "amount": 4200,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-04-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1800,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-04-02"
+  },
+  {
+    "type": "expense",
+    "amount": 255,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-04-08"
+  },
+  {
+    "type": "expense",
+    "amount": 185,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-04-19"
+  },
+  {
+    "type": "income",
+    "amount": 4200,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-05-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1800,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-05-02"
+  },
+  {
+    "type": "expense",
+    "amount": 248,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-05-09"
+  },
+  {
+    "type": "expense",
+    "amount": 178,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-05-21"
+  },
+  {
+    "type": "income",
+    "amount": 4200,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-06-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1825,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-06-02"
+  },
+  {
+    "type": "expense",
+    "amount": 262,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-06-10"
+  },
+  {
+    "type": "expense",
+    "amount": 192,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-06-22"
+  },
+  {
+    "type": "income",
+    "amount": 4250,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-07-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1825,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-07-02"
+  },
+  {
+    "type": "expense",
+    "amount": 275,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-07-11"
+  },
+  {
+    "type": "expense",
+    "amount": 201,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-07-20"
+  },
+  {
+    "type": "income",
+    "amount": 4250,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-08-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1850,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-08-02"
+  },
+  {
+    "type": "expense",
+    "amount": 268,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-08-09"
+  },
+  {
+    "type": "expense",
+    "amount": 196,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-08-21"
+  },
+  {
+    "type": "income",
+    "amount": 4250,
+    "category": "Salary",
+    "description": "Alex monthly salary",
+    "date": "2026-09-01"
+  },
+  {
+    "type": "expense",
+    "amount": 1850,
+    "category": "Rent",
+    "description": "Alex rent contribution",
+    "date": "2026-09-02"
+  },
+  {
+    "type": "expense",
+    "amount": 279,
+    "category": "Groceries",
+    "description": "Weekly groceries",
+    "date": "2026-09-10"
+  },
+  {
+    "type": "expense",
+    "amount": 205,
+    "category": "Utilities",
+    "description": "Electric and internet",
+    "date": "2026-09-23"
+  }
+]

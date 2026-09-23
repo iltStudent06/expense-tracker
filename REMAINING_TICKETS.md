@@ -51,22 +51,21 @@ Completed in the current branch and intentionally left in this section per reque
 
 ---
 
-### CAP-003 — Complete final README content
-**Description**
-The README is strong on setup and architecture, but it is still missing some final-delivery items called out in the capstone rubric.
+### ✅ CAP-003 — Complete final README content — COMPLETE
+**Status**
+Completed in the current branch. The README now includes a feature highlight section, team roster, and live deployment URL.
 
-**Evidence**
-- No live deployment URL is documented.
-- No team member names/responsibilities section is present.
-- The top-level feature list could be made explicit for presentation/review.
-- See [README.md](README.md).
+**Implementation evidence**
+- Feature highlights added in [README.md](README.md).
+- Team roster added in [README.md](README.md).
+- Live deployment URL documented in [README.md](README.md).
 
-**Acceptance criteria**
-- Add the public deployment URL.
-- Add a team roster with each member’s responsibilities/contributions.
-- Add a concise feature list section for the finished application.
-- Keep or refine the local Docker Compose run instructions.
-- Confirm README reflects the final routes, deployment flow, and known environment variables.
+**Acceptance criteria met**
+- Public deployment URL added.
+- Team roster added with each member’s contributions.
+- Concise feature list added for the finished application.
+- Local Docker Compose instructions remain available.
+- README reflects the final routes, deployment flow, and environment variables.
 
 ---
 
@@ -129,17 +128,17 @@ Completed in the current branch and validated operationally in the EKS environme
 
 ---
 
-### CAP-007 — Verify the live public deployment end-to-end
+### ✅ CAP-007 — Verify the live public deployment end-to-end — COMPLETE
 **Description**
 The repo contains Docker and Kubernetes assets, but the repository alone does not prove that the live EKS deployment is currently working.
 
 **Current status note**
 - Backend and frontend deployments have been rolled out successfully in EKS and pod health has been verified.
 - The public frontend URL is now verified and reachable.
-- Remaining proof points are the ingress hostname and any final browser demo screenshots or presentation artifacts.
+- Final browser screenshots can be captured during presentation prep under CAP-008.
 
 **Status**
-Mostly complete; live public URL verification passed.
+Completed in the current branch and validated operationally.
 
 **Acceptance criteria**
 - Public URL loads the landing page at `/`.

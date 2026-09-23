@@ -17,6 +17,17 @@ Full-stack capstone project with:
 - **Container runtime**: Docker / Docker Compose
 - **Orchestration**: Kubernetes manifests under `k8s/`
 
+## Feature highlights
+
+- Custom marketing landing page served at `/`
+- React single-page app served at `/app/`
+- Email/password authentication with JWT sessions
+- Role-based access control for user and admin actions
+- Transactions dashboard with summary cards and trend charts
+- Category and transaction CRUD flows with ownership checks
+- Docker Compose and Kubernetes deployment support
+- GitHub Actions workflows for CI and ECR/EKS deployment
+
 ## Repository layout
 
 - `api/src/` backend TypeScript source
@@ -29,6 +40,13 @@ Full-stack capstone project with:
 - `scripts/seed-transactions.js` seed utility script
 - `k8s/` Kubernetes manifests
 - `.github/workflows/` CI and deployment workflows
+
+## Team roster
+
+Repository contributors and main areas of work:
+
+- Gina Mei (`ginamei`, `iltStudent06`) — frontend UX polish, shared household seed data, core application features, and landing page work
+- Michaela Peterson (`iltStudent10`) — deployment hardening and documentation, API/frontend EKS rollout tuning, service exposure, and CI/CD workflow updates
 
 ## Prerequisites
 
@@ -241,8 +259,8 @@ docker compose down -v
 
 Default ports:
 
-- Frontend: `8080` (host) → `80` (container)
-- API: `3000` (host) → `3000` (container)
+- Frontend: `3000` (host) → `80` (container)
+- API: `4000` (host) → `4000` (container)
 - MongoDB: `27018` (host) → `27017` (container)
 
 Compose environment overrides:

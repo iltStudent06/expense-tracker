@@ -1,0 +1,170 @@
+[
+  {
+    "type": "income",
+    "amount": 1450,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-04-03"
+  },
+  {
+    "type": "expense",
+    "amount": 620,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-04-05"
+  },
+  {
+    "type": "expense",
+    "amount": 130,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-04-18"
+  },
+  {
+    "type": "expense",
+    "amount": 142,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-04-27"
+  },
+  {
+    "type": "income",
+    "amount": 1520,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-05-03"
+  },
+  {
+    "type": "expense",
+    "amount": 615,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-05-06"
+  },
+  {
+    "type": "expense",
+    "amount": 126,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-05-19"
+  },
+  {
+    "type": "expense",
+    "amount": 148,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-05-28"
+  },
+  {
+    "type": "income",
+    "amount": 1495,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-06-03"
+  },
+  {
+    "type": "expense",
+    "amount": 630,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-06-05"
+  },
+  {
+    "type": "expense",
+    "amount": 138,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-06-17"
+  },
+  {
+    "type": "expense",
+    "amount": 152,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-06-29"
+  },
+  {
+    "type": "income",
+    "amount": 1600,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-07-03"
+  },
+  {
+    "type": "expense",
+    "amount": 640,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-07-07"
+  },
+  {
+    "type": "expense",
+    "amount": 121,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-07-18"
+  },
+  {
+    "type": "expense",
+    "amount": 154,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-07-30"
+  },
+  {
+    "type": "income",
+    "amount": 1575,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-08-03"
+  },
+  {
+    "type": "expense",
+    "amount": 635,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-08-06"
+  },
+  {
+    "type": "expense",
+    "amount": 134,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-08-19"
+  },
+  {
+    "type": "expense",
+    "amount": 159,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-08-28"
+  },
+  {
+    "type": "income",
+    "amount": 1630,
+    "category": "Side Hustle",
+    "description": "Taylor freelance design gigs",
+    "date": "2026-09-03"
+  },
+  {
+    "type": "expense",
+    "amount": 645,
+    "category": "Childcare",
+    "description": "After-school program",
+    "date": "2026-09-05"
+  },
+  {
+    "type": "expense",
+    "amount": 129,
+    "category": "Healthcare",
+    "description": "Pharmacy and clinic co-pay",
+    "date": "2026-09-18"
+  },
+  {
+    "type": "expense",
+    "amount": 161,
+    "category": "Groceries",
+    "description": "Snacks and household essentials",
+    "date": "2026-09-29"
+  }
+]

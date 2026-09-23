@@ -78,7 +78,9 @@ interface TransactionForm {
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD"
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount || 0);
 }
 
@@ -190,6 +192,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<TransactionForm>({
     type: "expense",
     amount: "",
@@ -230,6 +233,7 @@ export default function DashboardPage() {
   }, [month, categoryFilter]);
 
   function startEditing(item: Transaction) {
+    setPendingDeleteId(null);
     const matchedCategory =
       categories.find((entry) => entry.id === item.categoryId) ??
       categories.find((entry) => entry.name.toLowerCase() === String(item.category).toLowerCase());
@@ -285,6 +289,8 @@ export default function DashboardPage() {
         method: "DELETE"
       });
 
+      setPendingDeleteId(null);
+
       if (editingId === itemId) {
         cancelEditing();
       }
@@ -293,6 +299,14 @@ export default function DashboardPage() {
     } catch (deleteError) {
       setError(getErrorMessage(deleteError));
     }
+  }
+
+  function requestDelete(itemId: string) {
+    setPendingDeleteId(itemId);
+  }
+
+  function cancelDelete() {
+    setPendingDeleteId(null);
   }
 
   const totals = summary?.totals ?? { income: 0, expenses: 0, balance: 0 };
@@ -350,6 +364,20 @@ export default function DashboardPage() {
     [transactions]
   );
 
+  const categoryFilterOptions = useMemo(() => {
+    const seen = new Set<string>();
+
+    return categories.filter((item) => {
+      const key = item.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [categories]);
+
   const visibleTransactions = useMemo(
     () =>
       orderedTransactions.filter((item) => {
@@ -359,6 +387,11 @@ export default function DashboardPage() {
         return matchesMonth && matchesCategory;
       }),
     [month, categoryFilter, orderedTransactions]
+  );
+
+  const recentTransactions = useMemo(
+    () => visibleTransactions.slice(0, 5),
+    [visibleTransactions]
   );
 
   return (
@@ -400,7 +433,7 @@ export default function DashboardPage() {
             Category
             <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
               <option value="">All categories</option>
-              {categories.map((item) => (
+              {categoryFilterOptions.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
@@ -430,30 +463,6 @@ export default function DashboardPage() {
 
       <section className="grid grid-2">
         <article className="panel">
-          <h2>Expense Breakdown</h2>
-          <div className="breakdown-list" aria-label="Expense breakdown by category">
-            {expenseBreakdown.length ? (
-              expenseBreakdown.map((entry) => (
-                <div key={`expense-${entry.name}`} className="breakdown-item">
-                  <div className="breakdown-labels">
-                    <span>{entry.name}</span>
-                    <strong>{formatCurrency(entry.amount)}</strong>
-                  </div>
-                  <div className="breakdown-bar-shell">
-                    <div
-                      className="breakdown-bar expense"
-                      style={{ width: `${(entry.amount / maxBreakdownAmount) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="muted">No expense categories for the current filter.</p>
-            )}
-          </div>
-        </article>
-
-        <article className="panel">
           <h2>Income Breakdown</h2>
           <div className="breakdown-list" aria-label="Income breakdown by category">
             {incomeBreakdown.length ? (
@@ -476,6 +485,30 @@ export default function DashboardPage() {
             )}
           </div>
         </article>
+
+        <article className="panel">
+          <h2>Expense Breakdown</h2>
+          <div className="breakdown-list" aria-label="Expense breakdown by category">
+            {expenseBreakdown.length ? (
+              expenseBreakdown.map((entry) => (
+                <div key={`expense-${entry.name}`} className="breakdown-item">
+                  <div className="breakdown-labels">
+                    <span>{entry.name}</span>
+                    <strong>{formatCurrency(entry.amount)}</strong>
+                  </div>
+                  <div className="breakdown-bar-shell">
+                    <div
+                      className="breakdown-bar expense"
+                      style={{ width: `${(entry.amount / maxBreakdownAmount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="muted">No expense categories for the current filter.</p>
+            )}
+          </div>
+        </article>
       </section>
 
       <section className="panel">
@@ -493,7 +526,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleTransactions.map((item) => {
+              {recentTransactions.map((item) => {
                 const isEditing = editingId === item.id;
 
                 return (
@@ -609,6 +642,20 @@ export default function DashboardPage() {
                             </button>
                           </>
                         ) : (
+                          pendingDeleteId === item.id ? (
+                            <>
+                              <button
+                                type="button"
+                                className="button-confirm-delete"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Confirm Delete
+                              </button>
+                              <button type="button" onClick={cancelDelete}>
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
                           <>
                             <Link to={`/transactions/${item.id}`} className="action-link-button">
                               View
@@ -616,17 +663,18 @@ export default function DashboardPage() {
                             <button type="button" onClick={() => startEditing(item)}>
                               Edit
                             </button>
-                            <button type="button" onClick={() => handleDelete(item.id)}>
+                            <button type="button" onClick={() => requestDelete(item.id)}>
                               Delete
                             </button>
                           </>
+                          )
                         )}
                       </div>
                     </td>
                   </tr>
                 );
               })}
-              {!visibleTransactions.length ? (
+              {!recentTransactions.length ? (
                 <tr>
                   <td colSpan={6}>No transactions for selected month or category.</td>
                 </tr>

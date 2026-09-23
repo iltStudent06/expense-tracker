@@ -286,6 +286,10 @@ h3 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.transaction-library-filters {
+  margin-bottom: 12px;
+}
+
 .span-2 {
   grid-column: span 2;
 }
@@ -304,6 +308,14 @@ button {
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+.button-confirm-delete {
+  background: #2563eb;
+}
+
+.button-confirm-delete:hover {
+  background: #1d4ed8;
 }
 
 .grid {

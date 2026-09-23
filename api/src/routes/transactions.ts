@@ -5,6 +5,7 @@ import { asyncHandler } from "../middleware/errorHandler.js";
 import { parseObjectId } from "../middleware/validate.js";
 import { CategoryModel } from "../models/Category.js";
 import { TransactionModel } from "../models/Transaction.js";
+import { User } from "../models/User.js";
 import { buildTransactionQuery, normalizeTransaction, toPublicCategory, toPublicTransaction } from "./helpers.js";
 
 const router = Router();
@@ -27,17 +28,28 @@ async function populateTransactionCategory(document: {
   amount: number;
   category: string;
   categoryId?: mongoose.Types.ObjectId | null;
+  ownerUserId: mongoose.Types.ObjectId;
   description?: string;
   date: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }) {
-  if (!document.categoryId) {
-    return toPublicTransaction(document);
-  }
+  const [category, owner] = await Promise.all([
+    document.categoryId ? CategoryModel.findById(document.categoryId).lean() : Promise.resolve(null),
+    User.findById(document.ownerUserId).select({ _id: 1, name: 1, email: 1 }).lean()
+  ]);
 
-  const category = await CategoryModel.findById(document.categoryId).lean();
   return {
     ...toPublicTransaction(document),
-    categoryDetails: category ? toPublicCategory(category) : null
+    createdAt: document.createdAt ? new Date(document.createdAt).toISOString() : null,
+    categoryDetails: category ? toPublicCategory(category) : null,
+    enteredBy: owner
+      ? {
+          id: owner._id.toString(),
+          name: owner.name,
+          email: owner.email
+        }
+      : null
   };
 }
 
@@ -145,10 +157,16 @@ router.put(
       return res.status(400).json({ error: normalized.error });
     }
 
-    const existing = await TransactionModel.findOne({
-      _id: parsed.value,
-      ownerUserId
-    }).lean();
+    const isAdmin = req.user?.role === "admin";
+
+    const existing = await TransactionModel.findOne(
+      isAdmin
+        ? { _id: parsed.value }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          }
+    ).lean();
 
     if (!existing) {
       return res.status(404).json({ error: "transaction not found" });
@@ -162,10 +180,14 @@ router.put(
     }
 
     const updated = await TransactionModel.findOneAndUpdate(
-      {
-        _id: parsed.value,
-        ownerUserId
-      },
+      isAdmin
+        ? {
+            _id: parsed.value
+          }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          },
       { $set: normalized.value },
       { returnDocument: "after", runValidators: true }
     ).lean();
@@ -192,10 +214,16 @@ router.delete(
       return res.status(400).json({ error: parsed.error });
     }
 
-    const removed = await TransactionModel.findOneAndDelete({
-      _id: parsed.value,
-      ownerUserId
-    }).lean();
+    const isAdmin = req.user?.role === "admin";
+
+    const removed = await TransactionModel.findOneAndDelete(
+      isAdmin
+        ? { _id: parsed.value }
+        : {
+            _id: parsed.value,
+            ownerUserId
+          }
+    ).lean();
     if (!removed) {
       return res.status(404).json({ error: "transaction not found" });
     }
