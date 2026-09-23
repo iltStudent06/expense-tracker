@@ -314,8 +314,8 @@ export default function CategoriesPage() {
       <section className="panel">
         <h2>Category Library</h2>
         <div className="filter-grid">
-          <label>
-            Type Filter
+          <label className="filter-inline-label">
+            Filter
             <select
               value={typeFilter}
               onChange={(event) =>
@@ -333,8 +333,8 @@ export default function CategoriesPage() {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Type</th>
                 <th>Color</th>
+                <th>Type</th>
                 <th>Description</th>
                 <th>Updated</th>
                 <th>Actions</th>
@@ -363,24 +363,6 @@ export default function CategoriesPage() {
                     </td>
                     <td>
                       {isEditing ? (
-                        <select
-                          value={editForm.type}
-                          onChange={(event) =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              type: event.target.value as "income" | "expense"
-                            }))
-                          }
-                        >
-                          <option value="expense">Expense</option>
-                          <option value="income">Income</option>
-                        </select>
-                      ) : (
-                        <span className={`status-badge ${category.type}`}>{category.type}</span>
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
                         <input
                           type="color"
                           value={editForm.color}
@@ -397,6 +379,24 @@ export default function CategoriesPage() {
                           />
                           {category.color}
                         </span>
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <select
+                          value={editForm.type}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              type: event.target.value as "income" | "expense"
+                            }))
+                          }
+                        >
+                          <option value="expense">Expense</option>
+                          <option value="income">Income</option>
+                        </select>
+                      ) : (
+                        <span className={`status-badge ${category.type}`}>{category.type}</span>
                       )}
                     </td>
                     <td>
