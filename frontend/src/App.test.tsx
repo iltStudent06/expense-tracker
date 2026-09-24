@@ -57,6 +57,123 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  test("shows navigation for authenticated users", async () => {
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({
+        token: "test-token",
+        user: { id: "user-1", name: "Test User", email: "test@example.com", role: "user" }
+      })
+    );
+
+    axiosInstance.request.mockImplementation((config) => {
+      const route = config.url;
+
+      if (route === "/api/transactions") {
+        return Promise.resolve({ data: [], status: 200 });
+      }
+
+      if (route === "/api/summary?month=2026-09") {
+        return Promise.resolve({
+          data: { totals: { income: 0, expenses: 0, balance: 0 } },
+          status: 200
+        });
+      }
+
+      if (route === "/api/trends?months=6") {
+        return Promise.resolve({ data: { trends: [] }, status: 200 });
+      }
+
+      if (route === "/api/dashboard") {
+        return Promise.resolve({
+          data: { totals: { transactions: 0, users: 1, categories: 0 }, recentTransactions: [] },
+          status: 200
+        });
+      }
+
+      if (route === "/api/categories") {
+        return Promise.resolve({ data: [], status: 200 });
+      }
+
+      return Promise.reject(new Error(`Unhandled axios path: ${String(route)}`));
+    });
+
+    renderApp(["/"]);
+
+    expect(await screen.findByRole("heading", { name: "Expense Tracker" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Categories" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Transactions" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
+    expect(screen.getByText("Test User · user")).toBeInTheDocument();
+  });
+
+  test("accepts login form input and submits credentials", async () => {
+    axiosInstance.request.mockRejectedValueOnce(new Error("network"));
+
+    renderApp(["/login"]);
+
+    const emailInput = screen.getByLabelText("Email") as HTMLInputElement;
+    const passwordInput = screen.getByLabelText("Password") as HTMLInputElement;
+
+    fireEvent.change(emailInput, { target: { value: "alex.household@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "ChangeMe123!" } });
+
+    expect(emailInput.value).toBe("alex.household@example.com");
+    expect(passwordInput.value).toBe("ChangeMe123!");
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => {
+      expect(axiosInstance.request).toHaveBeenCalledTimes(1);
+    });
+
+    const loginCall = axiosInstance.request.mock.calls[0][0];
+    expect(loginCall.url).toBe("/api/auth/login");
+    expect(loginCall.method).toBe("POST");
+    expect(JSON.parse(String(loginCall.data))).toEqual({
+      email: "alex.household@example.com",
+      password: "ChangeMe123!"
+    });
+  });
+
+  test("accepts register form input and submits payload", async () => {
+    axiosInstance.request.mockRejectedValueOnce(new Error("network"));
+
+    renderApp(["/register"]);
+
+    const nameInput = screen.getByLabelText("Name") as HTMLInputElement;
+    const emailInput = screen.getByLabelText("Email") as HTMLInputElement;
+    const passwordInput = screen.getByLabelText("Password") as HTMLInputElement;
+    const roleSelect = screen.getByLabelText("Role") as HTMLSelectElement;
+
+    fireEvent.change(nameInput, { target: { value: "Alex Rivera" } });
+    fireEvent.change(emailInput, { target: { value: "alex.household@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "ChangeMe123!" } });
+    fireEvent.change(roleSelect, { target: { value: "admin" } });
+
+    expect(nameInput.value).toBe("Alex Rivera");
+    expect(emailInput.value).toBe("alex.household@example.com");
+    expect(passwordInput.value).toBe("ChangeMe123!");
+    expect(roleSelect.value).toBe("admin");
+
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => {
+      expect(axiosInstance.request).toHaveBeenCalledTimes(1);
+    });
+
+    const registerCall = axiosInstance.request.mock.calls[0][0];
+    expect(registerCall.url).toBe("/api/auth/register");
+    expect(registerCall.method).toBe("POST");
+    expect(JSON.parse(String(registerCall.data))).toEqual({
+      name: "Alex Rivera",
+      email: "alex.household@example.com",
+      password: "ChangeMe123!",
+      role: "admin"
+    });
+  });
+
   test("renders dashboard data for an authenticated user", async () => {
     localStorage.setItem(
       AUTH_STORAGE_KEY,
@@ -344,6 +461,8 @@ describe("App", () => {
     });
 
     expect(await screen.findByText("Payday")).toBeInTheDocument();
+    const transactionRows = screen.getAllByRole("row");
+    expect(within(transactionRows[1]).getByText("Payday")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "View" }).length).toBeGreaterThan(0);
   });
 });

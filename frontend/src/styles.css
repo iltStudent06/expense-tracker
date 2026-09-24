@@ -35,7 +35,7 @@ body {
 
 .app-footer p {
   margin: 0;
-  padding: 1.15rem 0 2rem;
+  padding: 0.2rem 0 0.3rem;
   text-align: center;
 }
 
@@ -176,9 +176,9 @@ body {
 }
 
 .auth-footer {
-  margin-top: 2rem;
+  margin-top: 0.5rem;
   border-top: 1px solid #e2e8f0;
-  padding: 1.15rem 0 2rem;
+  padding: 0.2rem 0 0.3rem;
   color: #475569;
   font-size: 0.94rem;
   text-align: center;
@@ -274,7 +274,8 @@ h3 {
 }
 
 .form label,
-.filters label {
+.filters label,
+.filter-grid label {
   display: grid;
   gap: 6px;
   font-size: 14px;
@@ -284,6 +285,16 @@ h3 {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.filter-grid label.filter-inline-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.transaction-library-filters {
+  margin-bottom: 12px;
 }
 
 .span-2 {
