@@ -346,17 +346,6 @@ export default function DashboardPage() {
     [editingId, transactions]
   );
 
-  const availableCategories = useMemo(() => {
-    if (!editingTransaction) {
-      return categories;
-    }
-
-    // When editing, filter categories to only show those owned by the transaction owner
-    return categories.filter(
-      (cat) => !cat.ownerUserId || cat.ownerUserId === editingTransaction.ownerUserId
-    );
-  }, [editingTransaction, categories]);
-
   function handleTrendSort(column: TrendSortKey) {
     setTrendSort((prev) => {
       if (!prev || prev.key !== column) {
@@ -592,7 +581,7 @@ export default function DashboardPage() {
                             value={editForm.categoryId}
                             onChange={(event) => {
                               const selectedId = event.target.value;
-                              const selectedCategory = availableCategories.find((entry) => entry.id === selectedId);
+                              const selectedCategory = categories.find((entry) => entry.id === selectedId);
 
                               setEditForm((prev) => ({
                                 ...prev,
@@ -602,7 +591,7 @@ export default function DashboardPage() {
                             }}
                           >
                             <option value="">No existing category</option>
-                            {availableCategories.map((categoryOption) => (
+                            {categories.map((categoryOption) => (
                               <option key={categoryOption.id} value={categoryOption.id}>
                                 {categoryOption.name}
                               </option>
