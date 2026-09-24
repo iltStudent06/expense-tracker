@@ -110,9 +110,12 @@ router.get(
     const user = await UserModel.findById(ownerUserId).lean();
     const isAdmin = user?.role === "admin";
 
+    const transactionQuery = isAdmin ? {} : { ownerUserId };
+    const categoryQuery = isAdmin ? {} : { ownerUserId };
+
     const [transactionCount, categoryCount, recentDocuments, statusCounts, userCount] = await Promise.all([
-      TransactionModel.countDocuments({ ownerUserId }),
-      CategoryModel.countDocuments({ ownerUserId }),
+      TransactionModel.countDocuments(transactionQuery),
+      CategoryModel.countDocuments(categoryQuery),
       TransactionModel.find({ ownerUserId }).sort({ date: -1 }).limit(5).lean(),
       TransactionModel.aggregate([
         { $match: { ownerUserId } },
