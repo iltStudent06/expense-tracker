@@ -341,6 +341,11 @@ export default function DashboardPage() {
   const visibleCategoriesCount = isAdmin ? appTotals.categories : categories.length;
   const visibleTransactionsCount = isAdmin ? appTotals.transactions : transactions.length;
 
+  const editingTransaction = useMemo(
+    () => transactions.find((tx) => tx.id === editingId),
+    [editingId, transactions]
+  );
+
   function handleTrendSort(column: TrendSortKey) {
     setTrendSort((prev) => {
       if (!prev || prev.key !== column) {
@@ -564,35 +569,26 @@ export default function DashboardPage() {
                     </td>
                     <td>
                       {isEditing ? (
-                        <div className="cell-stack">
-                          <input
-                            type="text"
-                            value={editForm.category}
-                            onChange={(event) =>
-                              setEditForm((prev) => ({ ...prev, category: event.target.value }))
-                            }
-                          />
-                          <select
-                            value={editForm.categoryId}
-                            onChange={(event) => {
-                              const selectedId = event.target.value;
-                              const selectedCategory = categories.find((entry) => entry.id === selectedId);
+                        <select
+                          value={editForm.categoryId}
+                          onChange={(event) => {
+                            const selectedId = event.target.value;
+                            const selectedCategory = categories.find((entry) => entry.id === selectedId);
 
-                              setEditForm((prev) => ({
-                                ...prev,
-                                categoryId: selectedId,
-                                category: selectedCategory?.name ?? prev.category
-                              }));
-                            }}
-                          >
-                            <option value="">No existing category</option>
-                            {categories.map((categoryOption) => (
-                              <option key={categoryOption.id} value={categoryOption.id}>
-                                {categoryOption.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              categoryId: selectedId,
+                              category: selectedCategory?.name ?? prev.category
+                            }));
+                          }}
+                        >
+                          <option value="">No existing category</option>
+                          {categories.map((categoryOption) => (
+                            <option key={categoryOption.id} value={categoryOption.id}>
+                              {categoryOption.name}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <span
                           className="category-badge"

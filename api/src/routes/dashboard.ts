@@ -3,6 +3,7 @@ import { requireAuth, getAuthUserId } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { CategoryModel } from "../models/Category.js";
 import { TransactionModel } from "../models/Transaction.js";
+import { User as UserModel } from "../models/User.js";
 import { buildTransactionQuery, toMonthKey, toPublicTransaction } from "./helpers.js";
 
 const router = Router();
@@ -106,22 +107,35 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const ownerUserId = getAuthUserId(req);
-    const [transactionCount, categoryCount, recentDocuments, statusCounts] = await Promise.all([
-      TransactionModel.countDocuments({ ownerUserId }),
-      CategoryModel.countDocuments({ ownerUserId }),
+    const user = await UserModel.findById(ownerUserId).lean();
+    const isAdmin = user?.role === "admin";
+
+    const transactionQuery = isAdmin ? {} : { ownerUserId };
+    const categoryQuery = isAdmin ? {} : { ownerUserId };
+
+    const [transactionCount, categoryCount, recentDocuments, statusCounts, userCount] = await Promise.all([
+      TransactionModel.countDocuments(transactionQuery),
+      CategoryModel.countDocuments(categoryQuery),
       TransactionModel.find({ ownerUserId }).sort({ date: -1 }).limit(5).lean(),
       TransactionModel.aggregate([
         { $match: { ownerUserId } },
         { $group: { _id: "$type", count: { $sum: 1 } } }
-      ])
+      ]),
+      isAdmin ? UserModel.countDocuments() : Promise.resolve(0)
     ]);
 
+    const totals: Record<string, number> = {
+      transactions: transactionCount,
+      categories: categoryCount
+    };
+
+    if (isAdmin) {
+      totals.users = userCount as number;
+    }
+
     res.status(200).json({
-      totals: {
-        transactions: transactionCount,
-        categories: categoryCount
-      },
-      groupedCounts: Object.fromEntries(statusCounts.map((entry) => [entry._id, entry.count])),
+      totals,
+      groupedCounts: Object.fromEntries(statusCounts.map((entry: { _id: string; count: number }) => [entry._id, entry.count])),
       recentTransactions: recentDocuments.map(toPublicTransaction)
     });
   })

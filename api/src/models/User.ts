@@ -50,3 +50,4 @@ userSchema.methods.comparePassword = function comparePassword(password: string) 
 };
 
 export const User = model<IUser, UserModel>("User", userSchema);
+export const UserModel = User;
